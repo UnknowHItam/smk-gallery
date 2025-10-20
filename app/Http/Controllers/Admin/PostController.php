@@ -1,0 +1,263 @@
+<?php
+
+namespace App\Http\Controllers\Admin;
+
+use App\Http\Controllers\Controller;
+use App\Models\Posts;
+use App\Models\Kategori;
+use App\Models\Galery;
+use App\Models\Foto;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
+
+class PostController extends Controller
+{
+    public function index(Request $request)
+    {
+        $query = Posts::with([
+            'kategori', 
+            'petugas', 
+            'galery.foto',
+            'galery.likes.user',
+            'galery.shares.user',
+            'galery.downloads.user'
+        ]);
+
+        // Filter by search
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('judul', 'like', '%' . $search . '%')
+                  ->orWhere('isi', 'like', '%' . $search . '%');
+            });
+        }
+
+        // Filter by status
+        if ($request->filled('status')) {
+            $status = $request->status == '1' ? 'published' : 'draft';
+            $query->where('status', $status);
+        }
+
+        // Filter by category
+        if ($request->filled('category')) {
+            $query->where('kategori_id', $request->category);
+        }
+
+        $posts = $query->latest('created_at')->paginate(10);
+        
+        return view('admin.posts.index', compact('posts'));
+    }
+
+    public function create()
+    {
+        $kategoris = Kategori::all();
+        return view('admin.posts.create', compact('kategoris'));
+    }
+
+    public function store(Request $request)
+    {
+        $validated = $request->validate([
+            'judul' => 'required|string|max:255',
+            'isi' => 'required|string',
+            'kategori_id' => 'required|exists:kategori,id',
+            'status' => 'required|in:draft,published',
+            'foto_utama' => 'required|image|mimes:jpeg,png,jpg,gif,webp|max:12288',
+            'fotos_galeri' => 'nullable|array',
+            'fotos_galeri.*' => 'image|mimes:jpeg,png,jpg,gif,webp|max:12288'
+        ]);
+
+        // Get current authenticated petugas
+        $petugas = Auth::user();
+        
+        $post = Posts::create([
+            'judul' => $validated['judul'],
+            'isi' => $validated['isi'],
+            'kategori_id' => $validated['kategori_id'],
+            'petugas_id' => $petugas->id,
+            'status' => $validated['status'],
+            'created_at' => now()
+        ]);
+
+        // Create galery for this post
+        $galery = Galery::create([
+            'post_id' => $post->id,
+            'position' => 1,
+            'status' => 1
+        ]);
+
+        // Upload foto utama (thumbnail)
+        if ($request->hasFile('foto_utama')) {
+            $fotoUtama = $request->file('foto_utama');
+            $filename = 'utama_' . time() . '.' . $fotoUtama->getClientOriginalExtension();
+            $fotoUtama->storeAs('posts', $filename, 'public');
+
+            Foto::create([
+                'galery_id' => $galery->id,
+                'file' => $filename,
+                'judul' => $request->input('foto_utama_judul', 'Foto Utama')
+            ]);
+        }
+
+        // Upload foto galeri lainnya (multiple)
+        if ($request->hasFile('fotos_galeri')) {
+            foreach ($request->file('fotos_galeri') as $index => $foto) {
+                $filename = 'galeri_' . time() . '_' . $index . '.' . $foto->getClientOriginalExtension();
+                $foto->storeAs('posts', $filename, 'public');
+
+                Foto::create([
+                    'galery_id' => $galery->id,
+                    'file' => $filename,
+                    'judul' => $request->input('foto_galeri_judul.' . $index, '')
+                ]);
+            }
+        }
+
+        return redirect()->route('admin.posts.index')->with('success', 'Postingan berhasil ditambahkan');
+    }
+
+    public function edit(Posts $post)
+    {
+        $kategoris = Kategori::all();
+        $post->load(['kategori', 'galery.foto']);
+        return view('admin.posts.edit', compact('post', 'kategoris'));
+    }
+
+    public function update(Request $request, Posts $post)
+    {
+        $validated = $request->validate([
+            'judul' => 'required|string|max:255',
+            'isi' => 'required|string',
+            'kategori_id' => 'required|exists:kategori,id',
+            'status' => 'required|in:draft,published',
+            'foto_utama' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:12288',
+            'fotos_galeri' => 'nullable|array',
+            'fotos_galeri.*' => 'image|mimes:jpeg,png,jpg,gif,webp|max:12288'
+        ]);
+
+        // Update post data
+        $post->update([
+            'judul' => $validated['judul'],
+            'isi' => $validated['isi'],
+            'kategori_id' => $validated['kategori_id'],
+            'status' => $validated['status'],
+            'updated_at' => now()
+        ]);
+
+        // Get or create galery
+        $galery = $post->galery()->first();
+        if (!$galery) {
+            $galery = Galery::create([
+                'post_id' => $post->id,
+                'position' => 1,
+                'status' => 1
+            ]);
+        }
+
+        // Handle foto utama upload (replace first photo)
+        if ($request->hasFile('foto_utama')) {
+            // Delete old first photo if exists
+            $firstPhoto = $galery->foto()->first();
+            if ($firstPhoto) {
+                Storage::disk('public')->delete('posts/' . $firstPhoto->file);
+                $firstPhoto->delete();
+            }
+
+            // Upload new foto utama
+            $fotoUtama = $request->file('foto_utama');
+            $filename = 'utama_' . time() . '.' . $fotoUtama->getClientOriginalExtension();
+            $fotoUtama->storeAs('posts', $filename, 'public');
+
+            // Insert at the beginning
+            Foto::create([
+                'galery_id' => $galery->id,
+                'file' => $filename,
+                'judul' => $request->input('foto_utama_judul', 'Foto Utama')
+            ]);
+        }
+
+        // Handle foto galeri uploads (add to existing)
+        if ($request->hasFile('fotos_galeri')) {
+            foreach ($request->file('fotos_galeri') as $index => $foto) {
+                $filename = 'galeri_' . time() . '_' . $index . '_' . uniqid() . '.' . $foto->getClientOriginalExtension();
+                $foto->storeAs('posts', $filename, 'public');
+                
+                Foto::create([
+                    'galery_id' => $galery->id,
+                    'file' => $filename,
+                    'judul' => $request->input('foto_galeri_judul.' . $index, '')
+                ]);
+            }
+        }
+
+        return redirect()->route('admin.posts.index')->with('success', 'Postingan berhasil diperbarui!');
+    }
+
+    public function destroy(Posts $post)
+    {
+        // Delete associated photos
+        foreach ($post->galery as $galery) {
+            foreach ($galery->foto as $foto) {
+                Storage::disk('public')->delete('posts/' . $foto->file);
+            }
+        }
+        
+        $post->delete();
+        return redirect()->route('admin.posts.index')->with('success', 'Postingan berhasil dihapus');
+    }
+
+    public function deletePhoto(Foto $foto)
+    {
+        try {
+            // Delete file from storage
+            Storage::disk('public')->delete('posts/' . $foto->file);
+            
+            // Delete from database
+            $foto->delete();
+            
+            // Return JSON response for AJAX
+            if (request()->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Foto berhasil dihapus'
+                ]);
+            }
+            
+            // Fallback for non-AJAX requests
+            return back()->with('success', 'Foto berhasil dihapus');
+        } catch (\Exception $e) {
+            if (request()->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Gagal menghapus foto: ' . $e->getMessage()
+                ], 500);
+            }
+            
+            return back()->with('error', 'Gagal menghapus foto: ' . $e->getMessage());
+        }
+    }
+
+    public function stats(Posts $post)
+    {
+        $post->load([
+            'galery.likes.user',
+            'galery.shares.user',
+            'galery.downloads.user',
+            'galery.foto'
+        ]);
+
+        // Collect all interactions
+        $likes = collect();
+        $shares = collect();
+        $downloads = collect();
+
+        foreach ($post->galery as $gallery) {
+            $likes = $likes->merge($gallery->likes);
+            $shares = $shares->merge($gallery->shares);
+            $downloads = $downloads->merge($gallery->downloads);
+        }
+
+        return view('admin.posts.stats', compact('post', 'likes', 'shares', 'downloads'));
+    }
+}
