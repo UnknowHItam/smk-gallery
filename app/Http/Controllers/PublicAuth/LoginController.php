@@ -44,7 +44,7 @@ class LoginController extends Controller
                     
                     // Send OTP email - with error handling
                     try {
-                        \Illuminate\Support\Facades\Mail::send('emails.otp', ['otp' => $otp, 'user' => $user, 'type' => 'login'], function ($message) use ($user) {
+                        \Illuminate\Support\Facades\Mail::send('emails.otp', ['otp' => $otp, 'user' => $user, 'type' => 'register'], function ($message) use ($user) {
                             $message->to($user->email);
                             $message->subject('Kode OTP Verifikasi - ' . config('app.name'));
                         });
@@ -53,12 +53,13 @@ class LoginController extends Controller
                     }
                     
                     return response()->json([
-                        'success' => false,
-                        'message' => 'Akun Anda belum diverifikasi. Masukkan kode OTP yang dikirim ke email Anda.',
+                        'success' => true,
+                        'verified' => false,
+                        'message' => 'Akun Anda belum diverifikasi. Kode OTP telah dikirim ke email Anda.',
                         'show_otp_modal' => true,
                         'email' => $user->email,
-                        'type' => 'login'
-                    ], 403);
+                        'type' => 'register'
+                    ], 200);
                 }
                 
                 // User is verified, allow login

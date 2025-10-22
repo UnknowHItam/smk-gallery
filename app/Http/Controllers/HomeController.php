@@ -86,7 +86,6 @@ class HomeController extends Controller
             
             // Ambil agenda dari tabel agenda untuk bulan tersebut - OPTIMIZED
             $agendas = Agenda::select('id', 'judul', 'deskripsi', 'tanggal_mulai', 'tanggal_selesai', 'waktu_mulai', 'waktu_selesai', 'lokasi', 'warna', 'status')
-                ->where('status', 'aktif')
                 ->bulanIni($year, $month)
                 ->orderBy('tanggal_mulai', 'asc')
                 ->get();

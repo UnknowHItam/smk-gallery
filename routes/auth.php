@@ -17,10 +17,11 @@ Route::middleware('guest')->group(function () {
 
     Route::post('register', [RegisteredUserController::class, 'store']);
 
-    Route::get('login', [AuthenticatedSessionController::class, 'create'])
+    // Admin login route - obscured for security
+    Route::get('a38kSdF09/petugas-masuk', [AuthenticatedSessionController::class, 'create'])
         ->name('login');
 
-    Route::post('login', [AuthenticatedSessionController::class, 'store']);
+    Route::post('a38kSdF09/petugas-masuk', [AuthenticatedSessionController::class, 'store']);
 
     // Commented out - using PublicAuth routes instead
     // Route::get('forgot-password', [PasswordResetLinkController::class, 'create'])

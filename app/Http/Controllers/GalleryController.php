@@ -42,6 +42,16 @@ class GalleryController extends Controller
         $posts = $query->orderBy('created_at', 'desc')
                       ->paginate(12);
         
-        return view('gallery', compact('posts', 'categories', 'search', 'category'));
+        // Get top 3 most liked posts
+        $popularPosts = Posts::with(['kategori', 'galery.foto', 'galery.likes'])
+            ->where('status', 'published')
+            ->withCount(['galery as total_likes' => function($query) {
+                $query->join('gallery_likes', 'galery.id', '=', 'gallery_likes.gallery_id');
+            }])
+            ->orderBy('total_likes', 'desc')
+            ->take(3)
+            ->get();
+        
+        return view('gallery', compact('posts', 'categories', 'search', 'category', 'popularPosts'));
     }
 }

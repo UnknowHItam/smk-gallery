@@ -131,29 +131,16 @@
                     <!-- Actions -->
                     <div class="flex flex-col space-y-2">
                         <div class="flex items-center justify-between">
-                            <div class="flex space-x-2">
-                                <a href="{{ route('admin.posts.edit', $post) }}" 
-                                   class="inline-flex items-center px-3 py-1 border border-blue-300 rounded-md text-xs font-medium text-blue-700 bg-blue-50 hover:bg-blue-100">
-                                    <i class="fas fa-edit mr-1"></i> Edit
-                                </a>
-                                <a href="{{ route('posts.show', $post) }}" 
-                                   target="_blank"
-                                   class="inline-flex items-center px-3 py-1 border border-gray-300 rounded-md text-xs font-medium text-gray-700 bg-white hover:bg-gray-50">
-                                    <i class="fas fa-external-link-alt mr-1"></i> Lihat
-                                </a>
-                            </div>
+                            <a href="{{ route('admin.posts.edit', $post) }}" 
+                               class="inline-flex items-center px-3 py-1 border border-blue-300 rounded-md text-xs font-medium text-blue-700 bg-blue-50 hover:bg-blue-100">
+                                <i class="fas fa-edit mr-1"></i> Edit
+                            </a>
                             
-                            <form action="{{ route('admin.posts.destroy', $post) }}" 
-                                  method="POST" 
-                                  class="inline" 
-                                  onsubmit="return confirm('Apakah Anda yakin ingin menghapus postingan ini?')">
-                                @csrf
-                                @method('DELETE')
-                                <button type="submit" 
-                                        class="inline-flex items-center px-3 py-1 border border-red-300 rounded-md text-xs font-medium text-red-700 bg-red-50 hover:bg-red-100">
-                                    <i class="fas fa-trash mr-1"></i> Hapus
-                                </button>
-                            </form>
+                            <button type="button" 
+                                    class="inline-flex items-center px-3 py-1 border border-red-300 rounded-md text-xs font-medium text-red-700 bg-red-50 hover:bg-red-100"
+                                    onclick="confirmDelete({{ $post->id }}, '{{ addslashes($post->judul) }}')">
+                                <i class="fas fa-trash mr-1"></i> Hapus
+                            </button>
                         </div>
                         
                         @if($totalLikes > 0 || $totalShares > 0 || $totalDownloads > 0)
@@ -194,39 +181,203 @@
         </div>
     @endif
 
-    @push('scripts')
-    <script>
-        // Initialize tooltips
-        document.addEventListener('DOMContentLoaded', function() {
-            const tooltipElements = document.querySelectorAll('[data-tooltip]');
+    <!-- Delete Confirmation Modal -->
+    <div id="deleteModal" class="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50 hidden">
+        <div class="bg-white rounded-2xl shadow-2xl border border-gray-100 max-w-sm w-full mx-4">
+            <!-- Header with close button -->
+            <div class="flex items-center justify-between p-6 pb-4">
+                <h3 class="text-xl font-bold text-gray-900">Hapus Postingan</h3>
+                <button type="button" onclick="hideModal()" class="text-gray-400 hover:text-gray-600 transition-colors">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
             
-            tooltipElements.forEach(element => {
-                const tooltipText = element.getAttribute('data-tooltip');
-                const tooltip = document.createElement('span');
-                tooltip.className = 'hidden md:inline-block absolute z-10 py-1 px-2 text-xs font-medium text-white bg-gray-900 rounded-md shadow-sm opacity-0 group-hover:opacity-100 transition-opacity duration-200';
-                tooltip.textContent = tooltipText;
+            <!-- Content -->
+            <div class="px-6 pb-6">
+                <p class="text-gray-600 text-sm leading-relaxed mb-6">
+                    Apakah Anda yakin ingin menghapus postingan <strong id="postTitle" class="text-gray-900"></strong>? 
+                    Tindakan ini tidak dapat dibatalkan.
+                </p>
                 
-                const wrapper = document.createElement('div');
-                wrapper.className = 'relative flex items-center group';
+                <!-- Confirmation input -->
+                <div class="mb-6">
+                    <input type="text" 
+                           id="deleteConfirmInput" 
+                           class="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl text-gray-700 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all" 
+                           placeholder="Ketik 'Delete' untuk konfirmasi"
+                           autocomplete="off">
+                    <div id="deleteError" class="text-red-500 text-xs mt-2 hidden">
+                        <i class="fas fa-exclamation-circle mr-1"></i>Ketik "Delete" untuk melanjutkan
+                    </div>
+                </div>
                 
-                // Wrap the element with the wrapper
-                element.parentNode.insertBefore(wrapper, element);
-                wrapper.appendChild(element);
-                wrapper.appendChild(tooltip);
+                <!-- Action buttons -->
+                <form id="deleteForm" method="POST">
+                    @csrf
+                    @method('DELETE')
+                    <div class="flex gap-3">
+                        <button type="button" 
+                                class="flex-1 px-4 py-3 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-300 transition-all font-medium" 
+                                onclick="hideModal()">
+                            Batal
+                        </button>
+                        <button type="button" 
+                                id="deleteButton"
+                                class="flex-1 px-4 py-3 bg-gray-300 text-gray-500 rounded-xl focus:outline-none transition-all font-medium disabled:cursor-not-allowed" 
+                                onclick="submitDelete()" 
+                                disabled>
+                            Hapus
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Backdrop -->
+    <div id="deleteModalBackdrop" class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden"></div>
+
+    <script>
+        let currentPostId = null;
+        let currentPostTitle = null;
+
+        function confirmDelete(postId, postTitle) {
+            console.log('confirmDelete called with:', postId, postTitle);
+            currentPostId = postId;
+            currentPostTitle = postTitle;
+            
+            // Set post title in modal
+            const postTitleEl = document.getElementById('postTitle');
+            if (postTitleEl) {
+                postTitleEl.textContent = postTitle;
+            }
+            
+            // Reset input and button state
+            const inputEl = document.getElementById('deleteConfirmInput');
+            const deleteButton = document.getElementById('deleteButton');
+            const errorEl = document.getElementById('deleteError');
+            
+            if (inputEl) {
+                inputEl.value = '';
+                inputEl.classList.remove('border-red-500');
+                inputEl.classList.add('border-gray-200');
+            }
+            
+            if (deleteButton) {
+                deleteButton.disabled = true;
+                deleteButton.className = 'flex-1 px-4 py-3 bg-gray-300 text-gray-500 rounded-xl focus:outline-none transition-all font-medium disabled:cursor-not-allowed';
+            }
+            
+            if (errorEl) errorEl.classList.add('hidden');
+            
+            // Set form action
+            const formEl = document.getElementById('deleteForm');
+            if (formEl) {
+                formEl.action = `/admin/posts/${postId}`;
+            }
+            
+            // Show modal
+            const modalEl = document.getElementById('deleteModal');
+            const backdropEl = document.getElementById('deleteModalBackdrop');
+            
+            console.log('Modal elements found:', modalEl, backdropEl);
+            
+            if (modalEl && backdropEl) {
+                modalEl.classList.remove('hidden');
+                backdropEl.classList.remove('hidden');
+                console.log('Modal shown successfully');
                 
-                // Position the tooltip
-                function positionTooltip() {
-                    const rect = element.getBoundingClientRect();
-                    tooltip.style.top = `${rect.top - 30}px`;
-                    tooltip.style.left = `${rect.left + (rect.width / 2) - (tooltip.offsetWidth / 2)}px`;
-                }
-                
-                element.addEventListener('mouseenter', positionTooltip);
-                window.addEventListener('resize', positionTooltip);
-            });
+                // Auto-focus input after modal shown
+                setTimeout(() => {
+                    if (inputEl) inputEl.focus();
+                }, 100);
+            } else {
+                console.error('Modal elements not found!');
+            }
+        }
+
+        function submitDelete() {
+            console.log('submitDelete called');
+            const input = document.getElementById('deleteConfirmInput');
+            const errorMsg = document.getElementById('deleteError');
+            
+            console.log('Input value:', input ? input.value : 'Input not found');
+            
+            if (input.value !== 'Delete') {
+                console.log('Invalid input, showing error');
+                if (errorMsg) errorMsg.classList.remove('hidden');
+                input.classList.remove('border-gray-200');
+                input.classList.add('border-red-500');
+                input.focus();
+                return;
+            }
+            
+            // Submit form
+            const form = document.getElementById('deleteForm');
+            console.log('Form found:', form, 'Action:', form ? form.action : 'No form');
+            if (form && form.action) {
+                console.log('Submitting form to:', form.action);
+                form.submit();
+            } else {
+                console.error('Form not found or no action set!');
+            }
+        }
+
+        function hideModal() {
+            const modalEl = document.getElementById('deleteModal');
+            const backdropEl = document.getElementById('deleteModalBackdrop');
+            
+            if (modalEl && backdropEl) {
+                modalEl.classList.add('hidden');
+                backdropEl.classList.add('hidden');
+            }
+        }
+
+        // Close modal when clicking on backdrop
+        document.addEventListener('click', function(e) {
+            if (e.target.id === 'deleteModalBackdrop') {
+                hideModal();
+            }
+        });
+
+        // Wait for DOM to be ready
+        document.addEventListener('DOMContentLoaded', function() {
+            // Real-time validation for delete button
+            const deleteInput = document.getElementById('deleteConfirmInput');
+            if (deleteInput) {
+                deleteInput.addEventListener('input', function() {
+                    const deleteButton = document.getElementById('deleteButton');
+                    const errorEl = document.getElementById('deleteError');
+                    
+                    // Clear error
+                    if (errorEl) errorEl.classList.add('hidden');
+                    this.classList.remove('border-red-500');
+                    this.classList.add('border-gray-200');
+                    
+                    // Enable/disable delete button based on input
+                    if (deleteButton) {
+                        if (this.value === 'Delete') {
+                            deleteButton.disabled = false;
+                            deleteButton.className = 'flex-1 px-4 py-3 bg-red-600 text-white rounded-xl hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 transition-all font-medium';
+                        } else {
+                            deleteButton.disabled = true;
+                            deleteButton.className = 'flex-1 px-4 py-3 bg-gray-300 text-gray-500 rounded-xl focus:outline-none transition-all font-medium disabled:cursor-not-allowed';
+                        }
+                    }
+                });
+
+                // Allow Enter key to submit
+                deleteInput.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter' && this.value === 'Delete') {
+                        e.preventDefault();
+                        submitDelete();
+                    }
+                });
+            }
         });
     </script>
-    @endpush
 @endsection
 
 

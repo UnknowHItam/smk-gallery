@@ -37,11 +37,19 @@ class Agenda extends Model
     }
 
     /**
-     * Scope untuk agenda yang aktif
+     * Scope untuk agenda yang aktif (akan datang atau sedang dilaksanakan)
      */
     public function scopeAktif($query)
     {
-        return $query->where('status', 'aktif');
+        return $query->whereIn('status', ['akan_datang', 'dilaksanakan']);
+    }
+
+    /**
+     * Scope untuk agenda yang akan datang
+     */
+    public function scopeAkanDatang($query)
+    {
+        return $query->where('status', 'akan_datang');
     }
 
     /**
@@ -146,9 +154,9 @@ class Agenda extends Model
     public function getStatusBadgeColor()
     {
         return match($this->status) {
-            'aktif' => 'bg-green-100 text-green-800',
+            'akan_datang' => 'bg-blue-100 text-blue-800',
+            'dilaksanakan' => 'bg-green-100 text-green-800',
             'selesai' => 'bg-gray-100 text-gray-800',
-            'dibatalkan' => 'bg-red-100 text-red-800',
             default => 'bg-blue-100 text-blue-800',
         };
     }
@@ -159,10 +167,72 @@ class Agenda extends Model
     public function getStatusLabel()
     {
         return match($this->status) {
-            'aktif' => 'Aktif',
+            'akan_datang' => 'Akan Datang',
+            'dilaksanakan' => 'Dilaksanakan',
             'selesai' => 'Selesai',
-            'dibatalkan' => 'Dibatalkan',
             default => 'Unknown',
         };
+    }
+
+    /**
+     * Auto-update status agenda berdasarkan tanggal
+     */
+    public function checkAndUpdateStatus()
+    {
+        $today = Carbon::today();
+        
+        // Jika tanggal sudah lewat, ubah ke selesai
+        if ($this->tanggal_selesai < $today) {
+            if ($this->status !== 'selesai') {
+                $this->update(['status' => 'selesai']);
+                return true;
+            }
+        }
+        // Jika sedang berlangsung, ubah ke dilaksanakan
+        elseif ($this->tanggal_mulai <= $today && $this->tanggal_selesai >= $today) {
+            if ($this->status !== 'dilaksanakan') {
+                $this->update(['status' => 'dilaksanakan']);
+                return true;
+            }
+        }
+        // Jika belum dimulai, ubah ke akan datang
+        elseif ($this->tanggal_mulai > $today) {
+            if ($this->status !== 'akan_datang') {
+                $this->update(['status' => 'akan_datang']);
+                return true;
+            }
+        }
+        
+        return false;
+    }
+
+    /**
+     * Static method untuk update semua status agenda berdasarkan tanggal
+     */
+    public static function updateAllAgendaStatus()
+    {
+        $today = Carbon::today();
+        
+        // Update agenda yang sudah selesai
+        $selesai = self::where('tanggal_selesai', '<', $today)
+            ->where('status', '!=', 'selesai')
+            ->update(['status' => 'selesai']);
+        
+        // Update agenda yang sedang dilaksanakan
+        $dilaksanakan = self::where('tanggal_mulai', '<=', $today)
+            ->where('tanggal_selesai', '>=', $today)
+            ->where('status', '!=', 'dilaksanakan')
+            ->update(['status' => 'dilaksanakan']);
+        
+        // Update agenda yang akan datang
+        $akanDatang = self::where('tanggal_mulai', '>', $today)
+            ->where('status', '!=', 'akan_datang')
+            ->update(['status' => 'akan_datang']);
+        
+        return [
+            'selesai' => $selesai,
+            'dilaksanakan' => $dilaksanakan,
+            'akan_datang' => $akanDatang
+        ];
     }
 }

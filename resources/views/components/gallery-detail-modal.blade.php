@@ -72,7 +72,7 @@
                         </button>
                     </div>
                     
-                    <div id="modalGalleryGrid" class="grid grid-cols-2 gap-3">
+                    <div id="modalGalleryGrid" class="grid grid-cols-3 gap-3">
                         <!-- Thumbnails will be loaded here -->
                     </div>
                 </div>

@@ -57,8 +57,12 @@ class EkstrakurikulerController extends Controller
             'jam_mulai' => 'nullable|date_format:H:i',
             'jam_selesai' => 'nullable|date_format:H:i',
             'tempat' => 'nullable|string|max:255',
-            'foto' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:12288',
+            'foto' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
             'status' => 'boolean'
+        ], [
+            'foto.image' => 'File harus berupa gambar',
+            'foto.mimes' => 'Format foto harus: jpeg, png, jpg, gif, atau webp',
+            'foto.max' => 'Ukuran foto maksimal 5MB',
         ]);
 
         if ($request->hasFile('foto')) {
@@ -103,8 +107,12 @@ class EkstrakurikulerController extends Controller
             'jam_mulai' => 'nullable|date_format:H:i',
             'jam_selesai' => 'nullable|date_format:H:i',
             'tempat' => 'nullable|string|max:255',
-            'foto' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:12288',
+            'foto' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
             'status' => 'boolean'
+        ], [
+            'foto.image' => 'File harus berupa gambar',
+            'foto.mimes' => 'Format foto harus: jpeg, png, jpg, gif, atau webp',
+            'foto.max' => 'Ukuran foto maksimal 5MB',
         ]);
 
         if ($request->hasFile('foto')) {

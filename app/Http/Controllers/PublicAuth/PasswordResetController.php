@@ -83,6 +83,61 @@ class PasswordResetController extends Controller
     }
 
     /**
+     * Verify OTP for password reset
+     */
+    public function verifyOtp(Request $request)
+    {
+        try {
+            $validated = $request->validate([
+                'email' => 'required|email',
+                'otp' => 'required|digits:6'
+            ]);
+
+            // Get OTP from cache
+            $cachedOtp = \Illuminate\Support\Facades\Cache::get('otp_' . $validated['email']);
+            
+            if (!$cachedOtp) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Kode OTP sudah kadaluarsa. Silakan kirim ulang.'
+                ], 400);
+            }
+
+            if ($cachedOtp !== $validated['otp']) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Kode OTP tidak valid'
+                ], 400);
+            }
+
+            // OTP is valid, generate reset token and store in cache
+            $resetToken = Str::random(60);
+            \Illuminate\Support\Facades\Cache::put('reset_verified_' . $validated['email'], $resetToken, now()->addMinutes(15));
+            
+            // Clear OTP from cache
+            \Illuminate\Support\Facades\Cache::forget('otp_' . $validated['email']);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'OTP berhasil diverifikasi!',
+                'token' => $resetToken,
+                'redirect' => route('password.reset') . '?token=' . $resetToken . '&email=' . urlencode($validated['email'])
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->validator->errors()->first()
+            ], 422);
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('OTP verification error: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Terjadi kesalahan. Silakan coba lagi.'
+            ], 500);
+        }
+    }
+
+    /**
      * Reset password
      */
     public function reset(Request $request)

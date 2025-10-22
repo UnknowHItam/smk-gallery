@@ -42,17 +42,26 @@
                         </svg>
                     </button>
 
-                    @guest
-                        <a href="{{ route('login') }}" class="inline-flex items-center gap-2 bg-blue-700 hover:bg-blue-800 text-white text-sm font-medium px-4 py-2 rounded-full">
+                    @guest('public')
+                        <button onclick="showAuthModal()" class="inline-flex items-center gap-2 bg-blue-700 hover:bg-blue-800 text-white text-sm font-medium px-4 py-2 rounded-full transition-colors">
                             <span>Login</span>
-                        </a>
+                        </button>
                     @endguest
 
-                    @auth
-                        <form method="POST" action="{{ route('logout') }}">
-                            @csrf
-                            <button type="submit" class="inline-flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium px-4 py-2 rounded-full">Logout</button>
-                        </form>
+                    @auth('public')
+                        <div class="flex items-center gap-3">
+                            <button onclick="window.location.href='{{ route('profile') }}'" class="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded-full transition-colors">
+                                <span class="w-5 h-5 bg-gray-100 rounded-md flex items-center justify-center text-base">{{ Auth::guard('public')->user()->avatar ?? '🐼' }}</span>
+                                <span class="hidden md:inline">{{ Auth::guard('public')->user()->name }}</span>
+                                <span class="md:hidden">Profile</span>
+                            </button>
+                            <button onclick="handleLogout()" class="inline-flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium px-4 py-2 rounded-full transition-colors">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+                                </svg>
+                                <span class="hidden md:inline">Logout</span>
+                            </button>
+                        </div>
                     @endauth
                 </div>
             </div>
@@ -964,6 +973,613 @@
                 });
             }
         });
+    </script>
+
+    <!-- Auth Modal for Public Users -->
+    <div id="authModal" class="fixed inset-0 z-[100] hidden overflow-y-auto">
+        <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+            <div class="fixed inset-0 transition-opacity" aria-hidden="true" onclick="closeAuthModal()">
+                <div class="absolute inset-0 bg-black/50 backdrop-blur-sm"></div>
+            </div>
+            <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+            <div class="inline-block align-bottom bg-white rounded-2xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-sm sm:w-full" onclick="event.stopPropagation()">
+                <div class="bg-white px-8 pt-8 pb-8">
+                    <button onclick="closeAuthModal()" class="absolute top-4 right-4 p-1 text-gray-400 hover:text-gray-600 transition-colors">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                    <div class="text-center mb-6">
+                        <h3 id="authModalTitle" class="text-2xl font-bold text-gray-900 mb-2">Welcome Back!</h3>
+                        <p id="authModalSubtitle" class="text-sm text-gray-500">We missed you! Please enter your details.</p>
+                    </div>
+                    <div id="loginForm">
+                        <form onsubmit="handleLogin(event)" class="space-y-4">
+                            <div>
+                                <label class="block text-xs font-medium text-gray-700 mb-1.5">Email</label>
+                                <input type="email" name="email" required placeholder="Enter your Email" class="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-gray-700 mb-1.5">Password</label>
+                                <div class="relative">
+                                    <input type="password" name="password" id="loginPassword" required placeholder="Enter your Password" class="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all pr-10">
+                                    <button type="button" onclick="togglePassword('loginPassword')" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="flex items-center justify-between text-sm">
+                                <div class="flex items-center">
+                                    <input type="checkbox" name="remember" id="remember" class="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500">
+                                    <label for="remember" class="ml-2 text-gray-600">Remember me</label>
+                                </div>
+                                <a href="#" onclick="event.preventDefault(); showForgotPasswordModal();" class="text-indigo-600 hover:text-indigo-700 font-medium">Forgot password?</a>
+                            </div>
+                            <div id="loginError" class="hidden p-3 bg-red-50 border border-red-200 text-red-600 rounded-lg text-sm">
+                                <span></span>
+                            </div>
+                            <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2.5 rounded-lg transition-colors duration-200">
+                                Sign in
+                            </button>
+                        </form>
+                        <div class="mt-5">
+                            <div class="relative">
+                                <div class="absolute inset-0 flex items-center">
+                                    <div class="w-full border-t border-gray-200"></div>
+                                </div>
+                                <div class="relative flex justify-center text-xs">
+                                    <span class="px-2 bg-white text-gray-500">or</span>
+                                </div>
+                            </div>
+                            <button type="button" onclick="window.location.href='{{ route('auth.google') }}'" class="mt-4 w-full flex items-center justify-center gap-2 px-4 py-2.5 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors duration-200">
+                                <svg class="w-5 h-5" viewBox="0 0 24 24">
+                                    <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                                    <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                                    <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                                    <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                                </svg>
+                                <span class="text-sm font-medium text-gray-700">Sign in with google</span>
+                            </button>
+                            <p class="mt-5 text-center text-sm text-gray-600">
+                                Don't have an account? 
+                                <button onclick="showRegisterForm()" class="text-indigo-600 hover:text-indigo-700 font-semibold">Sign up</button>
+                            </p>
+                        </div>
+                    </div>
+                    <div id="registerForm" class="hidden">
+                        <form onsubmit="handleRegister(event)" class="space-y-4">
+                            <div>
+                                <label class="block text-xs font-medium text-gray-700 mb-1.5">Full Name</label>
+                                <input type="text" name="name" required placeholder="Enter your full name" class="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-gray-700 mb-1.5">Email</label>
+                                <input type="email" name="email" required placeholder="Enter your Email" class="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-gray-700 mb-1.5">Password</label>
+                                <div class="relative">
+                                    <input type="password" name="password" id="registerPassword" required minlength="8" placeholder="Enter your Password (min. 8 characters)" class="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all pr-10">
+                                    <button type="button" onclick="togglePassword('registerPassword')" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-gray-700 mb-1.5">Confirm Password</label>
+                                <div class="relative">
+                                    <input type="password" name="password_confirmation" id="confirmPassword" required minlength="8" placeholder="Confirm your Password" class="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all pr-10">
+                                    <button type="button" onclick="togglePassword('confirmPassword')" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+                            <div id="registerError" class="hidden p-3 bg-red-50 border border-red-200 text-red-600 rounded-lg text-sm">
+                                <span></span>
+                            </div>
+                            <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2.5 rounded-lg transition-colors duration-200">
+                                Sign up
+                            </button>
+                        </form>
+                        <div class="mt-5">
+                            <div class="relative">
+                                <div class="absolute inset-0 flex items-center">
+                                    <div class="w-full border-t border-gray-200"></div>
+                                </div>
+                                <div class="relative flex justify-center text-xs">
+                                    <span class="px-2 bg-white text-gray-500">or</span>
+                                </div>
+                            </div>
+                            <button type="button" onclick="window.location.href='{{ route('auth.google') }}'" class="mt-4 w-full flex items-center justify-center gap-2 px-4 py-2.5 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors duration-200">
+                                <svg class="w-5 h-5" viewBox="0 0 24 24">
+                                    <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                                    <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                                    <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                                    <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                                </svg>
+                                <span class="text-sm font-medium text-gray-700">Sign up with google</span>
+                            </button>
+                            <p class="mt-5 text-center text-sm text-gray-600">
+                                Already have an account? 
+                                <button onclick="showLoginForm()" class="text-indigo-600 hover:text-indigo-700 font-semibold">Sign in</button>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Forgot Password Modal -->
+    <div id="forgotPasswordModal" class="fixed inset-0 z-[100] hidden overflow-y-auto">
+        <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+            <!-- Background overlay -->
+            <div class="fixed inset-0 transition-opacity" aria-hidden="true" onclick="closeForgotPasswordModal()">
+                <div class="absolute inset-0 bg-black/50 backdrop-blur-sm"></div>
+            </div>
+
+            <!-- Modal panel -->
+            <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+
+            <div class="inline-block align-bottom bg-white rounded-2xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-sm sm:w-full" onclick="event.stopPropagation()">
+                <div class="bg-white px-8 pt-8 pb-8">
+                    <!-- Close button -->
+                    <button onclick="closeForgotPasswordModal()" class="absolute top-4 right-4 p-1 text-gray-400 hover:text-gray-600 transition-colors">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+
+                    <!-- Header -->
+                    <div class="text-center mb-6">
+                        <div class="inline-flex items-center justify-center w-12 h-12 bg-indigo-100 rounded-full mb-4">
+                            <svg class="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/>
+                            </svg>
+                        </div>
+                        <h3 class="text-2xl font-bold text-gray-900 mb-2">Forgot Password?</h3>
+                        <p class="text-sm text-gray-500">Enter your email and we'll send you a reset link.</p>
+                    </div>
+
+                    <!-- Forgot Password Form -->
+                    <form onsubmit="handleForgotPassword(event)" class="space-y-4">
+                        <div>
+                            <label class="block text-xs font-medium text-gray-700 mb-1.5">Email</label>
+                            <input type="email" name="email" required placeholder="Enter your Email" class="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all">
+                        </div>
+                        <div id="forgotPasswordError" class="hidden p-3 bg-red-50 border border-red-200 text-red-600 rounded-lg text-sm">
+                            <span></span>
+                        </div>
+                        <div id="forgotPasswordSuccess" class="hidden p-3 bg-green-50 border border-green-200 text-green-600 rounded-lg text-sm">
+                            <span></span>
+                        </div>
+                        <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2.5 rounded-lg transition-colors duration-200">
+                            Send Reset Link
+                        </button>
+                    </form>
+                    <div class="mt-5 text-center">
+                        <button onclick="closeForgotPasswordModal(); showAuthModal();" class="text-sm text-indigo-600 hover:text-indigo-700 font-semibold">
+                            Back to Login
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reusable OTP Modal -->
+    <div id="otpModal" class="fixed inset-0 z-[100] hidden overflow-y-auto">
+        <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+            <!-- Background overlay -->
+            <div class="fixed inset-0 transition-opacity" aria-hidden="true">
+                <div class="absolute inset-0 bg-black/50 backdrop-blur-sm"></div>
+            </div>
+
+            <!-- Modal panel -->
+            <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+
+            <div class="inline-block align-bottom bg-white rounded-2xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-sm sm:w-full" onclick="event.stopPropagation()">
+                <div class="bg-white px-8 pt-8 pb-8">
+                    <!-- Close button -->
+                    <button onclick="closeOtpModal()" class="absolute top-4 right-4 p-1 text-gray-400 hover:text-gray-600 transition-colors">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+
+                    <!-- Header -->
+                    <div class="text-center mb-6">
+                        <div class="inline-flex items-center justify-center w-12 h-12 bg-indigo-100 rounded-full mb-4">
+                            <svg class="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                            </svg>
+                        </div>
+                        <h3 class="text-2xl font-bold text-gray-900 mb-2">Verifikasi OTP</h3>
+                        <p class="text-sm text-gray-500 mb-1">Masukkan kode OTP yang telah dikirim ke:</p>
+                        <p id="otpEmailDisplay" class="text-sm font-medium text-indigo-600"></p>
+                    </div>
+
+                    <!-- OTP Form -->
+                    <form onsubmit="handleOtpVerify(event)" class="space-y-4">
+                        <input type="hidden" id="otpEmail" name="email">
+                        <input type="hidden" id="otpType" name="type">
+                        
+                        <div>
+                            <label class="block text-xs font-medium text-gray-700 mb-1.5">Kode OTP (6 digit)</label>
+                            <input 
+                                type="text" 
+                                id="otpInput" 
+                                name="otp" 
+                                required 
+                                maxlength="6" 
+                                pattern="[0-9]{6}"
+                                placeholder="000000" 
+                                class="w-full px-4 py-3 text-center text-2xl font-bold tracking-widest border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                                autocomplete="off">
+                        </div>
+                        
+                        <div id="otpError" class="hidden p-3 bg-red-50 border border-red-200 text-red-600 rounded-lg text-sm">
+                            <span></span>
+                        </div>
+                        <div id="otpSuccess" class="hidden p-3 bg-green-50 border border-green-200 text-green-600 rounded-lg text-sm">
+                            <span></span>
+                        </div>
+                        
+                        <button type="submit" id="otpVerifyBtn" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2.5 rounded-lg transition-colors duration-200">
+                            Verifikasi
+                        </button>
+                    </form>
+                    
+                    <!-- Resend OTP -->
+                    <div class="mt-6 text-center">
+                        <p class="text-sm text-gray-600 mb-2">Tidak menerima kode?</p>
+                        <button onclick="resendOtpCode()" id="resendOtpBtn" class="text-sm text-indigo-600 hover:text-indigo-700 font-semibold">
+                            Kirim Ulang Kode
+                        </button>
+                        <p id="resendOtpTimer" class="text-xs text-gray-500 mt-1"></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Public User Auth JavaScript -->
+    <script>
+        // Global variables for OTP
+        let otpResendTimeout = 60;
+        let otpResendInterval = null;
+
+        // Auth Modal Functions
+        function showAuthModal() {
+            document.getElementById('authModal').classList.remove('hidden');
+            showLoginForm();
+        }
+
+        function closeAuthModal() {
+            document.getElementById('authModal').classList.add('hidden');
+            document.getElementById('loginError').classList.add('hidden');
+            document.getElementById('registerError').classList.add('hidden');
+        }
+
+        function togglePassword(inputId) {
+            const input = document.getElementById(inputId);
+            if (input.type === 'password') {
+                input.type = 'text';
+            } else {
+                input.type = 'password';
+            }
+        }
+
+        function showLoginForm() {
+            document.getElementById('loginForm').classList.remove('hidden');
+            document.getElementById('registerForm').classList.add('hidden');
+            document.getElementById('authModalTitle').textContent = 'Welcome Back!';
+            document.getElementById('authModalSubtitle').textContent = 'We missed you! Please enter your details.';
+        }
+
+        function showRegisterForm() {
+            document.getElementById('loginForm').classList.add('hidden');
+            document.getElementById('registerForm').classList.remove('hidden');
+            document.getElementById('authModalTitle').textContent = 'Create Account';
+            document.getElementById('authModalSubtitle').textContent = 'Join us today! Please fill in your details.';
+        }
+
+        function showForgotPasswordModal() {
+            closeAuthModal();
+            document.getElementById('forgotPasswordModal').classList.remove('hidden');
+        }
+
+        function closeForgotPasswordModal() {
+            document.getElementById('forgotPasswordModal').classList.add('hidden');
+            document.getElementById('forgotPasswordError').classList.add('hidden');
+            document.getElementById('forgotPasswordSuccess').classList.add('hidden');
+        }
+
+        async function handleLogin(event) {
+            event.preventDefault();
+            const form = event.target;
+            const formData = new FormData(form);
+            const errorDiv = document.getElementById('loginError');
+
+            try {
+                const response = await fetch('{{ route("public.login") }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    },
+                    body: JSON.stringify({
+                        email: formData.get('email'),
+                        password: formData.get('password'),
+                        remember: formData.get('remember') === 'on'
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    // Check if user needs OTP verification
+                    if (data.show_otp_modal) {
+                        closeAuthModal();
+                        showOtpModal(data.email, data.type);
+                        return;
+                    }
+                    // User is verified, reload page
+                    window.location.reload();
+                } else {
+                    errorDiv.querySelector('span').textContent = data.message || 'Login gagal';
+                    errorDiv.classList.remove('hidden');
+                }
+            } catch (error) {
+                errorDiv.querySelector('span').textContent = error.message || 'Terjadi kesalahan';
+                errorDiv.classList.remove('hidden');
+            }
+        }
+
+        async function handleRegister(event) {
+            event.preventDefault();
+            const form = event.target;
+            const formData = new FormData(form);
+            const errorDiv = document.getElementById('registerError');
+
+            try {
+                const response = await fetch('{{ route("public.register") }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    },
+                    body: JSON.stringify({
+                        name: formData.get('name'),
+                        email: formData.get('email'),
+                        password: formData.get('password'),
+                        password_confirmation: formData.get('password_confirmation')
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    window.location.reload();
+                } else {
+                    errorDiv.querySelector('span').textContent = data.message || 'Registrasi gagal';
+                    errorDiv.classList.remove('hidden');
+                }
+            } catch (error) {
+                const errorMessage = error.message || 'Terjadi kesalahan';
+                errorDiv.querySelector('span').textContent = errorMessage;
+                errorDiv.classList.remove('hidden');
+            }
+        }
+
+        async function handleLogout() {
+            try {
+                const response = await fetch('{{ route("public.logout") }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    }
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    window.location.reload();
+                }
+            } catch (error) {
+                console.error('Logout error:', error);
+            }
+        }
+
+        async function handleForgotPassword(event) {
+            event.preventDefault();
+            const form = event.target;
+            const formData = new FormData(form);
+            const errorDiv = document.getElementById('forgotPasswordError');
+            const successDiv = document.getElementById('forgotPasswordSuccess');
+            const emailInput = formData.get('email');
+            
+            errorDiv.classList.add('hidden');
+            successDiv.classList.add('hidden');
+            
+            try {
+                const response = await fetch('{{ route("password.email") }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    },
+                    body: JSON.stringify({
+                        email: emailInput
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    errorDiv.querySelector('span').textContent = data.message || 'Email tidak ditemukan';
+                    errorDiv.classList.remove('hidden');
+                    return;
+                }
+                
+                if (data.success) {
+                    // Show OTP modal instead of success message
+                    if (data.show_otp_modal) {
+                        closeForgotPasswordModal();
+                        showOtpModal(data.email, data.type);
+                        form.reset();
+                        return;
+                    }
+                    successDiv.querySelector('span').textContent = data.message || 'Link reset password telah dikirim ke email Anda';
+                    successDiv.classList.remove('hidden');
+                    form.reset();
+                    setTimeout(() => { closeForgotPasswordModal(); }, 3000);
+                } else {
+                    errorDiv.querySelector('span').textContent = data.message || 'Terjadi kesalahan';
+                    errorDiv.classList.remove('hidden');
+                }
+            } catch (error) {
+                errorDiv.querySelector('span').textContent = 'Terjadi kesalahan. Silakan coba lagi.';
+                errorDiv.classList.remove('hidden');
+            }
+        }
+
+        // OTP Modal Functions
+        function showOtpModal(email, type) {
+            document.getElementById('otpModal').classList.remove('hidden');
+            document.getElementById('otpEmail').value = email;
+            document.getElementById('otpType').value = type;
+            document.getElementById('otpEmailDisplay').textContent = email;
+            document.getElementById('otpInput').value = '';
+            document.getElementById('otpError').classList.add('hidden');
+            document.getElementById('otpSuccess').classList.add('hidden');
+            
+            // Start resend timer
+            startOtpResendTimer();
+        }
+
+        function closeOtpModal() {
+            document.getElementById('otpModal').classList.add('hidden');
+            if (otpResendInterval) {
+                clearInterval(otpResendInterval);
+            }
+        }
+
+        function startOtpResendTimer() {
+            const resendBtn = document.getElementById('resendOtpBtn');
+            const timerDisplay = document.getElementById('resendOtpTimer');
+            let timeLeft = otpResendTimeout;
+            
+            resendBtn.disabled = true;
+            resendBtn.classList.add('opacity-50', 'cursor-not-allowed');
+            
+            otpResendInterval = setInterval(() => {
+                timeLeft--;
+                timerDisplay.textContent = `Kirim ulang dalam ${timeLeft} detik`;
+                
+                if (timeLeft <= 0) {
+                    clearInterval(otpResendInterval);
+                    resendBtn.disabled = false;
+                    resendBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                    timerDisplay.textContent = '';
+                }
+            }, 1000);
+        }
+
+        async function resendOtpCode() {
+            const email = document.getElementById('otpEmail').value;
+            const type = document.getElementById('otpType').value;
+            const errorDiv = document.getElementById('otpError');
+            
+            try {
+                const route = type === 'register' ? '{{ route("public.register.resend") }}' : '{{ route("password.email") }}';
+                
+                const response = await fetch(route, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    },
+                    body: JSON.stringify({ email: email })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    startOtpResendTimer();
+                    alert('Kode OTP baru telah dikirim ke email Anda');
+                } else {
+                    errorDiv.querySelector('span').textContent = data.message || 'Gagal mengirim ulang kode';
+                    errorDiv.classList.remove('hidden');
+                }
+            } catch (error) {
+                errorDiv.querySelector('span').textContent = 'Terjadi kesalahan. Silakan coba lagi.';
+                errorDiv.classList.remove('hidden');
+            }
+        }
+
+        async function handleOtpVerify(event) {
+            event.preventDefault();
+            const form = event.target;
+            const formData = new FormData(form);
+            const errorDiv = document.getElementById('otpError');
+            const successDiv = document.getElementById('otpSuccess');
+            const email = formData.get('email');
+            const otp = formData.get('otp');
+            const type = formData.get('type');
+            
+            errorDiv.classList.add('hidden');
+            successDiv.classList.add('hidden');
+            
+            try {
+                const route = type === 'register' ? '{{ route("public.register.verify") }}' : '{{ route("password.verify-otp") }}';
+                
+                const response = await fetch(route, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    },
+                    body: JSON.stringify({
+                        email: email,
+                        otp: otp
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    successDiv.querySelector('span').textContent = data.message;
+                    successDiv.classList.remove('hidden');
+                    
+                    setTimeout(() => {
+                        closeOtpModal();
+                        if (type === 'register') {
+                            window.location.reload();
+                        } else {
+                            // Redirect to reset password page or show reset form
+                            window.location.href = data.redirect || '/';
+                        }
+                    }, 1500);
+                } else {
+                    errorDiv.querySelector('span').textContent = data.message || 'Kode OTP tidak valid';
+                    errorDiv.classList.remove('hidden');
+                }
+            } catch (error) {
+                errorDiv.querySelector('span').textContent = 'Terjadi kesalahan. Silakan coba lagi.';
+                errorDiv.classList.remove('hidden');
+            }
+        }
     </script>
 
 </body>

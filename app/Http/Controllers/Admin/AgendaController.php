@@ -15,6 +15,9 @@ class AgendaController extends Controller
      */
     public function index(Request $request)
     {
+        // Auto-update status semua agenda berdasarkan tanggal
+        Agenda::updateAllAgendaStatus();
+        
         $query = Agenda::with('user')->orderBy('tanggal_mulai', 'desc');
 
         // Filter berdasarkan status
@@ -48,9 +51,9 @@ class AgendaController extends Controller
         // Statistik
         $stats = [
             'total' => Agenda::count(),
-            'aktif' => Agenda::aktif()->belumKadaluwarsa()->count(),
-            'kadaluwarsa' => Agenda::kadaluwarsa()->count(),
-            'bulan_ini' => Agenda::bulanIni()->count(),
+            'akan_datang' => Agenda::akanDatang()->count(),
+            'dilaksanakan' => Agenda::where('status', 'dilaksanakan')->count(),
+            'selesai' => Agenda::where('status', 'selesai')->count(),
         ];
 
         return view('admin.agenda.index', compact('agendas', 'stats'));
@@ -77,7 +80,7 @@ class AgendaController extends Controller
             'waktu_mulai' => 'nullable|date_format:H:i',
             'waktu_selesai' => 'nullable|date_format:H:i',
             'lokasi' => 'nullable|string|max:255',
-            'status' => 'required|in:aktif,selesai,dibatalkan',
+            'status' => 'required|in:akan_datang,dilaksanakan,selesai',
             'warna' => 'nullable|string|max:7',
         ], [
             'judul.required' => 'Judul agenda harus diisi',
@@ -134,7 +137,7 @@ class AgendaController extends Controller
             'waktu_mulai' => 'nullable|date_format:H:i',
             'waktu_selesai' => 'nullable|date_format:H:i',
             'lokasi' => 'nullable|string|max:255',
-            'status' => 'required|in:aktif,selesai,dibatalkan',
+            'status' => 'required|in:akan_datang,dilaksanakan,selesai',
             'warna' => 'nullable|string|max:7',
         ], [
             'judul.required' => 'Judul agenda harus diisi',
@@ -177,7 +180,7 @@ class AgendaController extends Controller
     public function updateStatus(Request $request, Agenda $agenda)
     {
         $validated = $request->validate([
-            'status' => 'required|in:aktif,selesai,dibatalkan',
+            'status' => 'required|in:akan_datang,dilaksanakan,selesai',
         ]);
 
         $agenda->update(['status' => $validated['status']]);
@@ -190,11 +193,13 @@ class AgendaController extends Controller
      */
     public function getAgendaByMonth(Request $request)
     {
+        // Auto-update status semua agenda berdasarkan tanggal
+        Agenda::updateAllAgendaStatus();
+        
         $year = $request->input('year', date('Y'));
         $month = $request->input('month', date('n'));
 
-        $agendas = Agenda::aktif()
-            ->belumKadaluwarsa()
+        $agendas = Agenda::whereIn('status', ['akan_datang', 'dilaksanakan'])
             ->bulanIni($year, $month)
             ->orderBy('tanggal_mulai', 'asc')
             ->get();

@@ -63,9 +63,17 @@ class PostController extends Controller
             'isi' => 'required|string',
             'kategori_id' => 'required|exists:kategori,id',
             'status' => 'required|in:draft,published',
-            'foto_utama' => 'required|image|mimes:jpeg,png,jpg,gif,webp|max:12288',
+            'foto_utama' => 'required|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
             'fotos_galeri' => 'nullable|array',
-            'fotos_galeri.*' => 'image|mimes:jpeg,png,jpg,gif,webp|max:12288'
+            'fotos_galeri.*' => 'image|mimes:jpeg,png,jpg,gif,webp|max:5120'
+        ], [
+            'foto_utama.required' => 'Foto utama harus diupload',
+            'foto_utama.image' => 'File harus berupa gambar',
+            'foto_utama.mimes' => 'Format foto harus: jpeg, png, jpg, gif, atau webp',
+            'foto_utama.max' => 'Ukuran foto utama maksimal 5MB',
+            'fotos_galeri.*.image' => 'Semua file galeri harus berupa gambar',
+            'fotos_galeri.*.mimes' => 'Format foto galeri harus: jpeg, png, jpg, gif, atau webp',
+            'fotos_galeri.*.max' => 'Ukuran setiap foto galeri maksimal 5MB',
         ]);
 
         // Get current authenticated petugas
@@ -131,9 +139,16 @@ class PostController extends Controller
             'isi' => 'required|string',
             'kategori_id' => 'required|exists:kategori,id',
             'status' => 'required|in:draft,published',
-            'foto_utama' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:12288',
+            'foto_utama' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:5120',
             'fotos_galeri' => 'nullable|array',
-            'fotos_galeri.*' => 'image|mimes:jpeg,png,jpg,gif,webp|max:12288'
+            'fotos_galeri.*' => 'image|mimes:jpeg,png,jpg,gif,webp|max:5120'
+        ], [
+            'foto_utama.image' => 'File harus berupa gambar',
+            'foto_utama.mimes' => 'Format foto harus: jpeg, png, jpg, gif, atau webp',
+            'foto_utama.max' => 'Ukuran foto utama maksimal 5MB',
+            'fotos_galeri.*.image' => 'Semua file galeri harus berupa gambar',
+            'fotos_galeri.*.mimes' => 'Format foto galeri harus: jpeg, png, jpg, gif, atau webp',
+            'fotos_galeri.*.max' => 'Ukuran setiap foto galeri maksimal 5MB',
         ]);
 
         // Update post data

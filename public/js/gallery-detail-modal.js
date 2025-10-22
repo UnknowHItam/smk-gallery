@@ -69,18 +69,39 @@ function populateModal(gallery) {
 // Load Gallery Thumbnails
 function loadGalleryThumbnails(photos) {
     const grid = document.getElementById('modalGalleryGrid');
+    const seeMoreBtn = document.querySelector('button[onclick="openFullGallery()"]');
     
     if (!photos || photos.length === 0) {
         grid.innerHTML = '<p class="text-gray-500 text-center col-span-2">Tidak ada gambar</p>';
+        if (seeMoreBtn) seeMoreBtn.style.display = 'none';
         return;
     }
     
-    grid.innerHTML = photos.map(photo => `
+    // Show only first 3 photos
+    const photosToShow = photos.slice(0, 3);
+    const remainingCount = photos.length - 3;
+    
+    grid.innerHTML = photosToShow.map(photo => `
         <img src="/storage/posts/${photo.file}" 
              alt="${photo.title || 'Gallery Image'}" 
              class="w-full h-24 object-cover rounded-lg cursor-pointer hover:opacity-80 transition-opacity"
              onclick="changeMainImage('/storage/posts/${photo.file}')">
     `).join('');
+    
+    // Update "See more" button text and visibility
+    if (seeMoreBtn) {
+        if (remainingCount > 0) {
+            seeMoreBtn.style.display = 'flex';
+            seeMoreBtn.innerHTML = `
+                See more (${remainingCount})
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                </svg>
+            `;
+        } else {
+            seeMoreBtn.style.display = 'none';
+        }
+    }
 }
 
 // Change Main Image
@@ -255,7 +276,7 @@ function openFullGallery() {
     grid.innerHTML = currentGalleryData.photos.map(photo => `
         <img src="/storage/posts/${photo.file}" 
              alt="${photo.title || 'Gallery Image'}" 
-             class="w-full h-48 object-cover rounded-lg cursor-pointer hover:opacity-80 transition-opacity"
+             class="w-full h-32 object-cover rounded-lg cursor-pointer hover:opacity-80 transition-opacity"
              onclick="openFullSizeViewer('/storage/posts/${photo.file}')">
     `).join('');
     

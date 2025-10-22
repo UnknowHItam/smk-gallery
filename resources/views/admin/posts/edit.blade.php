@@ -10,16 +10,10 @@
             <h1 class="text-2xl font-bold text-gray-900">Edit Postingan</h1>
             <p class="text-gray-600 mt-1">Perbarui konten: {{ $post->judul }}</p>
         </div>
-        <div class="flex items-center space-x-3">
-            <a href="{{ route('posts.show', $post) }}" target="_blank" class="btn-secondary">
-                <i class="fas fa-external-link-alt mr-2"></i>
-                Lihat Post
-            </a>
-            <a href="{{ route('admin.posts.index') }}" class="btn-secondary">
-                <i class="fas fa-arrow-left mr-2"></i>
-                Kembali
-            </a>
-        </div>
+        <a href="{{ route('admin.posts.index') }}" class="btn-secondary">
+            <i class="fas fa-arrow-left mr-2"></i>
+            Kembali
+        </a>
     </div>
     
     @if($errors->any())
@@ -166,7 +160,7 @@
                         <div class="text-center py-6">
                             <i class="fas fa-image text-3xl text-blue-400 mb-3"></i>
                             <p class="text-base font-medium text-gray-700 mb-1">Klik untuk upload foto utama</p>
-                            <p class="text-xs text-gray-400 mt-1">Maksimal 12MB, format: JPG, PNG, GIF</p>
+                            <p class="text-xs text-gray-400 mt-1">Maksimal 5MB, format: JPG, PNG, GIF</p>
                         </div>
                     </div>
                     <input type="file" id="foto-utama-input" name="foto_utama" accept="image/*" class="hidden">
@@ -186,7 +180,7 @@
                             <i class="fas fa-images text-3xl text-green-400 mb-3"></i>
                             <p class="text-base font-medium text-gray-700 mb-1">Klik untuk upload banyak foto</p>
                             <p class="text-xs text-gray-500">atau drag & drop file di sini</p>
-                            <p class="text-xs text-gray-400 mt-1">Bisa pilih banyak foto sekaligus - Maksimal 12MB per foto</p>
+                            <p class="text-xs text-gray-400 mt-1">Bisa pilih banyak foto sekaligus - Maksimal 5MB per foto</p>
                         </div>
                     </div>
                     <input type="file" id="foto-galeri-input" name="fotos_galeri[]" multiple accept="image/*" class="hidden">
@@ -214,6 +208,55 @@
 </div>
 
     <script>
+        // Validasi ukuran file (maksimal 5MB)
+        const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB in bytes
+        const MAX_FILE_SIZE_TEXT = '5MB';
+
+        function validateFileSize(file, inputElement) {
+            if (file.size > MAX_FILE_SIZE) {
+                // Show error message
+                const errorDiv = document.createElement('div');
+                errorDiv.className = 'mt-3 p-4 bg-red-50 border-l-4 border-red-500 rounded-lg';
+                errorDiv.innerHTML = `
+                    <div class="flex items-start">
+                        <i class="fas fa-exclamation-circle text-red-500 mt-0.5 mr-3"></i>
+                        <div>
+                            <h4 class="font-semibold text-red-800">Ukuran File Terlalu Besar!</h4>
+                            <p class="text-sm text-red-700 mt-1">
+                                File yang Anda pilih berukuran <strong>${(file.size / 1024 / 1024).toFixed(2)} MB</strong>.
+                                Ukuran maksimal yang diperbolehkan adalah <strong>${MAX_FILE_SIZE_TEXT}</strong>.
+                            </p>
+                            <p class="text-sm text-red-600 mt-2">
+                                Silakan kompres atau pilih foto dengan ukuran lebih kecil.
+                            </p>
+                        </div>
+                    </div>
+                `;
+                
+                // Insert error message after the input's parent
+                const uploadArea = inputElement.closest('.form-group');
+                const existingError = uploadArea.querySelector('.file-size-error');
+                if (existingError) {
+                    existingError.remove();
+                }
+                errorDiv.classList.add('file-size-error');
+                uploadArea.appendChild(errorDiv);
+                
+                // Clear the input
+                inputElement.value = '';
+                return false;
+            }
+            
+            // Remove error message if exists
+            const uploadArea = inputElement.closest('.form-group');
+            const existingError = uploadArea.querySelector('.file-size-error');
+            if (existingError) {
+                existingError.remove();
+            }
+            
+            return true;
+        }
+
         // Preview Foto Utama
         document.getElementById('foto-utama-input').addEventListener('change', function(e) {
             const file = e.target.files[0];
@@ -223,6 +266,12 @@
             previewContainer.innerHTML = '';
             
             if (file && file.type.startsWith('image/')) {
+                // Validate file size
+                if (!validateFileSize(file, this)) {
+                    fotoPreview.classList.add('hidden');
+                    return;
+                }
+                
                 fotoPreview.classList.remove('hidden');
                 
                 const reader = new FileReader();
@@ -257,6 +306,64 @@
             previewContainer.innerHTML = '';
             
             if (files.length > 0) {
+                // Validate all files
+                let allValid = true;
+                let invalidFiles = [];
+                
+                Array.from(files).forEach((file) => {
+                    if (file.size > MAX_FILE_SIZE) {
+                        allValid = false;
+                        invalidFiles.push({
+                            name: file.name,
+                            size: (file.size / 1024 / 1024).toFixed(2)
+                        });
+                    }
+                });
+                
+                if (!allValid) {
+                    // Show error for invalid files
+                    const errorDiv = document.createElement('div');
+                    errorDiv.className = 'mt-3 p-4 bg-red-50 border-l-4 border-red-500 rounded-lg';
+                    let fileList = invalidFiles.map(f => `<li>${f.name} (${f.size} MB)</li>`).join('');
+                    errorDiv.innerHTML = `
+                        <div class="flex items-start">
+                            <i class="fas fa-exclamation-circle text-red-500 mt-0.5 mr-3"></i>
+                            <div>
+                                <h4 class="font-semibold text-red-800">Beberapa File Terlalu Besar!</h4>
+                                <p class="text-sm text-red-700 mt-1">
+                                    File berikut melebihi ukuran maksimal <strong>${MAX_FILE_SIZE_TEXT}</strong>:
+                                </p>
+                                <ul class="list-disc list-inside text-sm text-red-600 mt-2 ml-2">
+                                    ${fileList}
+                                </ul>
+                                <p class="text-sm text-red-600 mt-2">
+                                    Silakan kompres atau pilih foto dengan ukuran lebih kecil.
+                                </p>
+                            </div>
+                        </div>
+                    `;
+                    
+                    const uploadArea = this.closest('.form-group');
+                    const existingError = uploadArea.querySelector('.file-size-error');
+                    if (existingError) {
+                        existingError.remove();
+                    }
+                    errorDiv.classList.add('file-size-error');
+                    uploadArea.appendChild(errorDiv);
+                    
+                    // Clear the input
+                    this.value = '';
+                    fotoPreview.classList.add('hidden');
+                    return;
+                }
+                
+                // Remove error message if exists
+                const uploadArea = this.closest('.form-group');
+                const existingError = uploadArea.querySelector('.file-size-error');
+                if (existingError) {
+                    existingError.remove();
+                }
+                
                 fotoPreview.classList.remove('hidden');
                 
                 Array.from(files).forEach((file, index) => {

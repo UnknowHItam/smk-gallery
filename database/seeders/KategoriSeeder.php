@@ -16,7 +16,6 @@ class KategoriSeeder extends Seeder
         $kategoris = [
             ['judul' => 'Kegiatan'],
             ['judul' => 'Kejuaraan'],
-            ['judul' => 'Ekstrakurikuler'],
         ];
 
         foreach ($kategoris as $kategori) {

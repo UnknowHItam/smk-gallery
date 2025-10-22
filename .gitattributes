@@ -6,6 +6,16 @@
 *.md diff=markdown
 *.php diff=php
 
+# Binary files - prevent corruption during git operations
+*.jpg binary
+*.jpeg binary
+*.png binary
+*.gif binary
+*.webp binary
+*.ico binary
+*.pdf binary
+*.zip binary
+
 /.github export-ignore
 CHANGELOG.md export-ignore
 .styleci.yml export-ignore

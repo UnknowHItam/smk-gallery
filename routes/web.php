@@ -35,6 +35,8 @@ Route::get('/verify-email/{id}/{hash}', [EmailVerificationController::class, 've
 // Password Reset Routes
 Route::post('/forgot-password', [PasswordResetController::class, 'sendResetLink'])
     ->name('password.email');
+Route::post('/password/verify-otp', [PasswordResetController::class, 'verifyOtp'])
+    ->name('password.verify-otp');
 Route::get('/reset-password', function () {
     return view('reset-password');
 })->name('password.reset');
@@ -61,6 +63,8 @@ Route::get('/api/agenda/month', [HomeController::class, 'getAgendaByMonth'])->na
 // Public User Authentication Routes
 Route::post('/public/login', [PublicLoginController::class, 'login'])->name('public.login');
 Route::post('/public/register', [PublicRegisterController::class, 'register'])->name('public.register');
+Route::post('/public/register/verify', [PublicRegisterController::class, 'verifyOtp'])->name('public.register.verify');
+Route::post('/public/register/resend', [PublicRegisterController::class, 'resendOtp'])->name('public.register.resend');
 Route::post('/public/logout', [PublicLoginController::class, 'logout'])->name('public.logout');
 Route::get('/public/user', [PublicLoginController::class, 'user'])->name('public.user');
 
@@ -90,7 +94,7 @@ require __DIR__.'/auth.php';
 // Admin routes
 Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/', [AdminDashboardController::class, 'index'])->name('dashboard');
-    Route::resource('posts', AdminPostController::class);
+    Route::resource('posts', AdminPostController::class)->except(['show']);
     Route::get('posts/{post}/stats', [AdminPostController::class, 'stats'])->name('posts.stats');
     Route::delete('fotos/{foto}', [AdminPostController::class, 'deletePhoto'])->name('fotos.destroy');
     Route::resource('ekstrakurikuler', AdminEkstrakurikulerController::class);

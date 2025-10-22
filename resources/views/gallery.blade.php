@@ -295,82 +295,128 @@
     <div class="h-16"></div>
 
 
-    <!-- Enhanced Hero Section - Clean White Style -->
-    <section class="relative py-8 md:py-12 bg-white overflow-hidden">
-        <!-- Subtle Background Shading -->
-        <div class="absolute inset-0">
-            <div class="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-gray-50 via-blue-50/30 to-indigo-50/20"></div>
-        </div>
+    <!-- Enhanced Hero Section - Half Page with Popular Posts -->
+    <section class="relative bg-white overflow-hidden" style="min-height: 50vh;">
+        <!-- Subtle Background -->
+        <div class="absolute inset-0 bg-gradient-to-br from-gray-50 via-blue-50/30 to-indigo-50/20"></div>
 
-        <div class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <!-- Main Hero Card -->
-            <div class="bg-gradient-to-br from-blue-600 to-indigo-700 rounded-3xl overflow-hidden shadow-xl">
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-0 items-center min-h-[400px]">
-                    <!-- Left Content -->
-                    <div class="p-8 md:p-12 text-white space-y-6">
-                        <!-- Title -->
-                        <h1 class="text-3xl md:text-4xl lg:text-5xl font-bold leading-tight">
-                            GALLERY WARGA
-                        </h1>
-
-                        <!-- Stats -->
-                        <div class="flex gap-4">
-                            <div class="text-center">
-                                <div class="bg-white/20 backdrop-blur-sm rounded-xl px-4 py-2 min-w-[60px]">
-                                    <div class="text-2xl font-bold">{{ $posts->total() }}</div>
-                                    <div class="text-xs opacity-80">Posts</div>
+        <div class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
+                <!-- Main Hero Section - 2/3 width -->
+                <div class="lg:col-span-2">
+                    <div class="bg-gradient-to-br from-blue-600 to-indigo-700 rounded-3xl overflow-hidden shadow-xl h-full">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-0 items-center h-full min-h-[400px]">
+                            <!-- Left Content -->
+                            <div class="p-8 md:p-10 text-white space-y-6">
+                                <!-- Title -->
+                                <div>
+                                    <h1 class="text-4xl md:text-5xl font-bold leading-tight mb-2">
+                                        GALLERY
+                                    </h1>
+                                    <p class="text-blue-100 text-lg">Dokumentasi Kegiatan Sekolah</p>
                                 </div>
-                            </div>
-                            <div class="text-center">
-                                <div class="bg-white/20 backdrop-blur-sm rounded-xl px-4 py-2 min-w-[60px]">
-                                    <div class="text-2xl font-bold">{{ $categories->count() }}</div>
-                                    <div class="text-xs opacity-80">Categories</div>
-                                </div>
-                            </div>
-                        </div>
 
-                    </div>
-
-                    <!-- Right Content - Image -->
-                    <div class="relative h-[400px] lg:h-full">
-                        <img src="{{ asset('images/hero-campus.jpg') }}" alt="Gallery Hero" class="w-full h-full object-cover">
-                        <div class="absolute inset-0 bg-gradient-to-l from-transparent to-blue-700/50"></div>
-                        
-                        <!-- Floating Stats Badge -->
-                        <div class="absolute bottom-6 right-6">
-                            <div class="bg-white/95 backdrop-blur-sm rounded-2xl p-4 shadow-xl">
-                                <div class="flex items-center space-x-3">
-                                    <div class="flex -space-x-2">
-                                        <div class="w-8 h-8 rounded-full bg-gradient-to-r from-pink-400 to-pink-600 border-2 border-white flex items-center justify-center text-white text-xs font-bold">{{ substr($posts->total(), 0, 1) }}</div>
-                                        <div class="w-8 h-8 rounded-full bg-gradient-to-r from-blue-400 to-blue-600 border-2 border-white flex items-center justify-center text-white text-xs font-bold">{{ substr($posts->total(), -1) }}</div>
-                                        <div class="w-8 h-8 rounded-full bg-gradient-to-r from-purple-400 to-purple-600 border-2 border-white flex items-center justify-center text-white text-xs font-bold">+</div>
+                                <!-- Stats -->
+                                <div class="flex gap-4">
+                                    <div class="bg-white/20 backdrop-blur-sm rounded-2xl px-5 py-3 min-w-[80px] text-center">
+                                        <div class="text-3xl font-bold">{{ $posts->total() }}</div>
+                                        <div class="text-xs opacity-90 mt-1">Total Posts</div>
                                     </div>
-                                    <div class="text-left">
-                                        <p class="text-xs text-gray-600">Total</p>
-                                        <p class="text-sm font-bold text-gray-900">{{ $posts->total() }} Kegiatan</p>
+                                    <div class="bg-white/20 backdrop-blur-sm rounded-2xl px-5 py-3 min-w-[80px] text-center">
+                                        <div class="text-3xl font-bold">{{ $categories->count() }}</div>
+                                        <div class="text-xs opacity-90 mt-1">Categories</div>
                                     </div>
                                 </div>
+
+                                <!-- Category Pills -->
+                                <div class="flex flex-wrap gap-2 pt-2">
+                                    <a href="{{ route('gallery') }}" class="px-4 py-2 {{ !$category || $category == 'all' ? 'bg-white text-blue-700' : 'bg-white/20 text-white hover:bg-white/30' }} rounded-full text-sm font-medium transition-all duration-300">
+                                        Semua
+                                    </a>
+                                    <a href="{{ route('gallery', ['category' => 'Kejuaraan']) }}" class="px-4 py-2 {{ $category == 'Kejuaraan' ? 'bg-white text-blue-700' : 'bg-white/20 text-white hover:bg-white/30' }} rounded-full text-sm font-medium transition-all duration-300">
+                                        Kejuaraan
+                                    </a>
+                                    <a href="{{ route('gallery', ['category' => 'Kegiatan']) }}" class="px-4 py-2 {{ $category == 'Kegiatan' ? 'bg-white text-blue-700' : 'bg-white/20 text-white hover:bg-white/30' }} rounded-full text-sm font-medium transition-all duration-300">
+                                        Kegiatan
+                                    </a>
+                                </div>
+                            </div>
+
+                            <!-- Right Content - Image -->
+                            <div class="relative h-[300px] md:h-full">
+                                <img src="{{ asset('images/hero-campus.jpg') }}" alt="Gallery Hero" class="w-full h-full object-cover">
+                                <div class="absolute inset-0 bg-gradient-to-l from-transparent to-blue-700/40"></div>
                             </div>
                         </div>
                     </div>
                 </div>
-            </div>
 
+                <!-- Popular Posts Sidebar - 1/3 width -->
+                <div class="lg:col-span-1">
+                    <div class="bg-white rounded-3xl shadow-xl p-6 h-full">
+                        <div class="flex items-center justify-between mb-5">
+                            <h3 class="text-xl font-bold text-gray-900 flex items-center gap-2">
+                                <svg class="w-6 h-6 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+                                </svg>
+                                <span>Terpopuler</span>
+                            </h3>
+                            <span class="text-xs text-gray-500 bg-gray-100 px-3 py-1 rounded-full">Top 3</span>
+                        </div>
 
-            <!-- Category Pills Below Search -->
-            <div class="mt-6 flex flex-wrap justify-center gap-3">
-                <a href="{{ route('gallery') }}" class="px-6 py-2 {{ !$category || $category == 'all' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200' }} rounded-full font-medium transition-all duration-300 shadow-md hover:shadow-lg">
-                    Semua
-                </a>
-                <a href="{{ route('gallery', ['category' => 'Kejuaraan']) }}" class="px-6 py-2 {{ $category == 'Kejuaraan' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200' }} rounded-full font-medium transition-all duration-300 shadow-md hover:shadow-lg">
-                    Kejuaraan
-                </a>
-                <a href="{{ route('gallery', ['category' => 'Ekstrakurikuler']) }}" class="px-6 py-2 {{ $category == 'Ekstrakurikuler' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200' }} rounded-full font-medium transition-all duration-300 shadow-md hover:shadow-lg">
-                    Ekstrakurikuler
-                </a>
-                <a href="{{ route('gallery', ['category' => 'Kegiatan']) }}" class="px-6 py-2 {{ $category == 'Kegiatan' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200' }} rounded-full font-medium transition-all duration-300 shadow-md hover:shadow-lg">
-                    Kegiatan
-                </a>
+                        <div class="space-y-4">
+                            @forelse($popularPosts as $index => $popular)
+                                <div class="group cursor-pointer" onclick="openGalleryDetail({{ $popular->id }})">
+                                    <div class="flex gap-3 p-3 rounded-2xl hover:bg-gray-50 transition-all duration-300">
+                                        <!-- Rank Badge -->
+                                        <div class="flex-shrink-0">
+                                            <div class="w-10 h-10 rounded-xl {{ $index == 0 ? 'bg-gradient-to-br from-yellow-400 to-yellow-600' : ($index == 1 ? 'bg-gradient-to-br from-gray-300 to-gray-500' : 'bg-gradient-to-br from-orange-400 to-orange-600') }} flex items-center justify-center text-white font-bold shadow-md">
+                                                {{ $index + 1 }}
+                                            </div>
+                                        </div>
+
+                                        <!-- Thumbnail -->
+                                        <div class="flex-shrink-0 w-16 h-16 rounded-xl overflow-hidden bg-gray-100">
+                                            @if($popular->galery->count() > 0 && $popular->galery->first()->foto->count() > 0)
+                                                <img src="{{ asset('storage/posts/' . $popular->galery->first()->foto->first()->file) }}" 
+                                                     alt="{{ $popular->judul }}" 
+                                                     class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300">
+                                            @else
+                                                <div class="w-full h-full flex items-center justify-center">
+                                                    <svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                                    </svg>
+                                                </div>
+                                            @endif
+                                        </div>
+
+                                        <!-- Content -->
+                                        <div class="flex-1 min-w-0">
+                                            <h4 class="font-semibold text-sm text-gray-900 line-clamp-2 mb-1 group-hover:text-blue-600 transition-colors">
+                                                {{ $popular->judul }}
+                                            </h4>
+                                            <div class="flex items-center gap-2 text-xs text-gray-500">
+                                                <svg class="w-3.5 h-3.5 text-red-500" fill="currentColor" viewBox="0 0 20 20">
+                                                    <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd"/>
+                                                </svg>
+                                                <span class="font-medium">{{ $popular->total_likes ?? 0 }} likes</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            @empty
+                                <div class="text-center py-8">
+                                    <div class="w-16 h-16 bg-gray-100 rounded-2xl flex items-center justify-center mx-auto mb-3">
+                                        <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                            </svg>
+                                    </div>
+                                    <p class="text-sm text-gray-500">Belum ada postingan populer</p>
+                                </div>
+                            @endforelse
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </section>
@@ -1620,15 +1666,15 @@
                 const data = await response.json();
 
                 if (data.success) {
-                    // User is verified, reload page
-                    window.location.reload();
-                } else {
-                    // Check if OTP modal should be shown (unverified user)
+                    // Check if user needs OTP verification
                     if (data.show_otp_modal) {
                         closeAuthModal();
                         showOtpModal(data.email, data.type);
                         return;
                     }
+                    // User is verified, reload page
+                    window.location.reload();
+                } else {
                     errorDiv.querySelector('span').textContent = data.message || 'Login gagal';
                     errorDiv.classList.remove('hidden');
                 }

@@ -145,9 +145,9 @@
                             id="status" 
                             class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 @error('status') border-red-500 @enderror"
                             required>
-                        <option value="aktif" {{ old('status') == 'aktif' ? 'selected' : '' }}>Aktif</option>
+                        <option value="akan_datang" {{ old('status', 'akan_datang') == 'akan_datang' ? 'selected' : '' }}>Akan Datang</option>
+                        <option value="dilaksanakan" {{ old('status') == 'dilaksanakan' ? 'selected' : '' }}>Dilaksanakan</option>
                         <option value="selesai" {{ old('status') == 'selesai' ? 'selected' : '' }}>Selesai</option>
-                        <option value="dibatalkan" {{ old('status') == 'dibatalkan' ? 'selected' : '' }}>Dibatalkan</option>
                     </select>
                     @error('status')
                         <p class="mt-1 text-sm text-red-600">{{ $message }}</p>

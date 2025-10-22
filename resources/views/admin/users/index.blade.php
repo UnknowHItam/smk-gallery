@@ -80,9 +80,15 @@
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <div class="flex items-center">
                                     <div class="flex-shrink-0 h-10 w-10">
-                                        <div class="h-10 w-10 rounded-lg bg-blue-100 flex items-center justify-center">
-                                            <span class="text-sm font-medium text-blue-600">{{ strtoupper(substr($user->name, 0, 1)) }}</span>
-                                        </div>
+                                        @if($user->avatar)
+                                            <div class="h-10 w-10 rounded-lg bg-gray-100 flex items-center justify-center text-2xl">
+                                                {{ $user->avatar }}
+                                            </div>
+                                        @else
+                                            <div class="h-10 w-10 rounded-lg bg-gradient-to-br from-blue-400 to-indigo-500 flex items-center justify-center text-white font-semibold">
+                                                {{ strtoupper(substr($user->name, 0, 1)) }}
+                                            </div>
+                                        @endif
                                     </div>
                                     <div class="ml-4">
                                         <div class="text-sm font-medium text-gray-900">{{ $user->name }}</div>
@@ -443,30 +449,38 @@
         }
     }
 
-    // Real-time validation for delete button
-    document.getElementById('deleteConfirmInput')?.addEventListener('input', function() {
-        const deleteButton = document.getElementById('deleteButton');
-        const errorEl = document.getElementById('deleteError');
-        
-        // Clear error
-        errorEl.classList.add('hidden');
-        this.classList.remove('border-red-500');
-        
-        // Enable/disable delete button based on input
-        if (this.value === 'Delete') {
-            deleteButton.disabled = false;
-            deleteButton.className = 'flex-1 px-4 py-3 bg-red-600 text-white rounded-xl hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 transition-all font-medium';
-        } else {
-            deleteButton.disabled = true;
-            deleteButton.className = 'flex-1 px-4 py-3 bg-gray-300 text-gray-500 rounded-xl focus:outline-none transition-all font-medium disabled:cursor-not-allowed';
-        }
-    });
+    // Wait for DOM to be ready
+    document.addEventListener('DOMContentLoaded', function() {
+        // Real-time validation for delete button
+        const deleteInput = document.getElementById('deleteConfirmInput');
+        if (deleteInput) {
+            deleteInput.addEventListener('input', function() {
+                const deleteButton = document.getElementById('deleteButton');
+                const errorEl = document.getElementById('deleteError');
+                
+                // Clear error
+                if (errorEl) errorEl.classList.add('hidden');
+                this.classList.remove('border-red-500');
+                
+                // Enable/disable delete button based on input
+                if (deleteButton) {
+                    if (this.value === 'Delete') {
+                        deleteButton.disabled = false;
+                        deleteButton.className = 'flex-1 px-4 py-3 bg-red-600 text-white rounded-xl hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 transition-all font-medium';
+                    } else {
+                        deleteButton.disabled = true;
+                        deleteButton.className = 'flex-1 px-4 py-3 bg-gray-300 text-gray-500 rounded-xl focus:outline-none transition-all font-medium disabled:cursor-not-allowed';
+                    }
+                }
+            });
 
-    // Allow Enter key to submit
-    document.getElementById('deleteConfirmInput')?.addEventListener('keypress', function(e) {
-        if (e.key === 'Enter' && this.value === 'Delete') {
-            e.preventDefault();
-            submitDelete();
+            // Allow Enter key to submit
+            deleteInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter' && this.value === 'Delete') {
+                    e.preventDefault();
+                    submitDelete();
+                }
+            });
         }
     });
     </script>

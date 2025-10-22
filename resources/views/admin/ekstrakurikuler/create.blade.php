@@ -113,7 +113,7 @@
                             <i class="fas fa-camera text-4xl text-gray-400 mb-4"></i>
                             <p class="text-lg font-medium text-gray-700 mb-2">Klik untuk upload foto</p>
                             <p class="text-sm text-gray-500">atau drag & drop file di sini</p>
-                            <p class="text-xs text-gray-400 mt-2">Maksimal 12MB, format: JPG, PNG, GIF</p>
+                            <p class="text-xs text-gray-400 mt-2">Maksimal 5MB, format: JPG, PNG, GIF</p>
                         </div>
                     </div>
                     <input type="file" id="foto-input" name="foto" accept="image/*" class="hidden">
@@ -158,6 +158,53 @@
 </div>
 
 <script>
+    // Validasi ukuran file (maksimal 5MB)
+    const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB in bytes
+    const MAX_FILE_SIZE_TEXT = '5MB';
+
+    document.getElementById('foto-input').addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        
+        if (file && file.size > MAX_FILE_SIZE) {
+            // Show error message
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'mt-3 p-4 bg-red-50 border-l-4 border-red-500 rounded-lg file-size-error';
+            errorDiv.innerHTML = `
+                <div class="flex items-start">
+                    <i class="fas fa-exclamation-circle text-red-500 mt-0.5 mr-3"></i>
+                    <div>
+                        <h4 class="font-semibold text-red-800">Ukuran File Terlalu Besar!</h4>
+                        <p class="text-sm text-red-700 mt-1">
+                            File yang Anda pilih berukuran <strong>${(file.size / 1024 / 1024).toFixed(2)} MB</strong>.
+                            Ukuran maksimal yang diperbolehkan adalah <strong>${MAX_FILE_SIZE_TEXT}</strong>.
+                        </p>
+                        <p class="text-sm text-red-600 mt-2">
+                            Silakan kompres atau pilih foto dengan ukuran lebih kecil.
+                        </p>
+                    </div>
+                </div>
+            `;
+            
+            // Insert error message
+            const uploadArea = this.closest('.form-group');
+            const existingError = uploadArea.querySelector('.file-size-error');
+            if (existingError) {
+                existingError.remove();
+            }
+            uploadArea.appendChild(errorDiv);
+            
+            // Clear the input
+            this.value = '';
+        } else {
+            // Remove error message if exists
+            const uploadArea = this.closest('.form-group');
+            const existingError = uploadArea.querySelector('.file-size-error');
+            if (existingError) {
+                existingError.remove();
+            }
+        }
+    });
+
     // Radio card selection
     document.querySelectorAll('.radio-card input[type="radio"]').forEach(radio => {
         radio.addEventListener('change', function() {

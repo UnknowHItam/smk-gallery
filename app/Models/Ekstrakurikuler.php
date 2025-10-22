@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Storage;
 
 class Ekstrakurikuler extends Model
 {
@@ -29,5 +30,23 @@ class Ekstrakurikuler extends Model
     public function photos()
     {
         return $this->hasMany(EkstrakurikulerPhoto::class)->orderBy('order');
+    }
+
+    /**
+     * Get the full URL for the ekstrakurikuler photo
+     */
+    public function getFotoUrlAttribute()
+    {
+        if (!$this->foto) {
+            return asset('images/placeholder.jpg');
+        }
+        
+        // Check if file exists in storage
+        if (Storage::disk('public')->exists('ekstrakurikuler/' . $this->foto)) {
+            return asset('storage/ekstrakurikuler/' . $this->foto);
+        }
+        
+        // Fallback to placeholder if file doesn't exist
+        return asset('images/placeholder.jpg');
     }
 }

@@ -54,33 +54,47 @@ DB_USERNAME=root
 DB_PASSWORD=
 ```
 
-5. **Create Storage Directories**
+5. **⚠️ PENTING: Setup Storage (Agar Foto Tidak Broken!)**
+
+**Cara Cepat (Recommended):**
+```bash
+# Windows - Double click file ini:
+setup-storage.bat
+
+# Linux/Mac - Jalankan:
+bash setup-storage.sh
+```
+
+**Atau Manual:**
 ```bash
 # Windows
 mkdir storage\app\public\posts
 mkdir storage\app\public\ekstrakurikuler
+php artisan storage:link
 
 # Linux/Mac
 mkdir -p storage/app/public/posts
 mkdir -p storage/app/public/ekstrakurikuler
-```
-
-6. **Create Storage Symlink**
-```bash
 php artisan storage:link
+chmod -R 775 storage
 ```
 
-7. **Run Migrations**
+> **💡 CATATAN PENTING:** 
+> - **SETIAP KALI** clone project di device baru, WAJIB jalankan `php artisan storage:link`
+> - Jika tidak, semua foto yang diupload akan broken/tidak muncul
+> - Symbolic link `public/storage` tidak ter-commit ke Git (sudah ada di .gitignore)
+
+6. **Run Migrations**
 ```bash
 php artisan migrate
 ```
 
-8. **Seed Database (Optional)**
+7. **Seed Database (Optional)**
 ```bash
 php artisan db:seed
 ```
 
-9. **Run Development Server**
+8. **Run Development Server**
 ```bash
 php artisan serve
 ```
@@ -150,21 +164,45 @@ Default admin credentials (jika menggunakan seeder):
 
 ## 🐛 Troubleshooting
 
-### Gambar Broken/Tidak Muncul
+### ❌ Gambar Broken/Tidak Muncul (MASALAH PALING UMUM!)
 
-**Penyebab:** Directory storage atau symlink tidak ada
+**Penyebab:** Symbolic link `public/storage` hilang setelah clone/upload project
 
-**Solusi:**
+**✅ Solusi Cepat:**
 ```bash
-# Buat directory
-mkdir storage\app\public\posts
+# Windows - Double click:
+setup-storage.bat
 
-# Hapus symlink lama
-Remove-Item -Path "public\storage" -Recurse -Force
-
-# Buat symlink baru
-php artisan storage:link
+# Linux/Mac:
+bash setup-storage.sh
 ```
+
+**Atau Manual:**
+```bash
+# 1. Hapus symlink lama (jika ada)
+# Windows:
+rmdir public\storage
+
+# Linux/Mac:
+rm -rf public/storage
+
+# 2. Buat symlink baru
+php artisan storage:link
+
+# 3. Verifikasi
+# Pastikan folder public/storage sudah ada dan merupakan symlink
+```
+
+**Kenapa Ini Terjadi?**
+- Symbolic link `public/storage` tidak di-commit ke Git (ada di .gitignore)
+- Setiap clone project di device baru, symlink hilang
+- Foto disimpan di `storage/app/public/posts/` tapi diakses via `public/storage/posts/`
+- Tanpa symlink, path tidak terhubung → foto broken
+
+**Pencegahan:**
+- **SELALU** jalankan `php artisan storage:link` setelah clone project
+- Atau gunakan script `setup-storage.bat` / `setup-storage.sh`
+- Lihat dokumentasi lengkap di [STORAGE_SETUP.md](STORAGE_SETUP.md)
 
 ### Permission Denied (Linux/Mac)
 
