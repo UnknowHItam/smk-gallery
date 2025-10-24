@@ -121,6 +121,15 @@ class StatisticsController extends Controller
             ->take(5)
             ->get();
         
+        // Get top 5 most viewed posts
+        $topViewedPosts = Posts::with(['kategori', 'galery.views'])
+            ->withCount(['galery as total_views' => function($query) {
+                $query->join('gallery_views', 'galery.id', '=', 'gallery_views.gallery_id');
+            }])
+            ->orderBy('total_views', 'desc')
+            ->take(5)
+            ->get();
+        
         // Get top 5 most downloaded posts
         $topDownloadedPosts = Posts::with(['kategori', 'galery.downloads'])
             ->withCount(['galery as total_downloads' => function($query) {
@@ -153,6 +162,7 @@ class StatisticsController extends Controller
             'categories' => $categoryData,
             'stats' => $stats,
             'topLikedPosts' => $topLikedPosts,
+            'topViewedPosts' => $topViewedPosts,
             'topDownloadedPosts' => $topDownloadedPosts,
             'recentFeedback' => $recentFeedback,
             'ratingDistribution' => $ratingDistribution,

@@ -6,6 +6,9 @@ let currentImageIndex = 0;
 // Open Gallery Detail Modal
 async function openGalleryDetail(postId) {
     try {
+        // Show loading state
+        showLoadingModal();
+        
         const response = await fetch(`/gallery/${postId}/detail`);
         const data = await response.json();
         
@@ -16,7 +19,8 @@ async function openGalleryDetail(postId) {
             // Populate modal with data
             populateModal(data.gallery);
             
-            // Show modal
+            // Hide loading, show modal
+            hideLoadingModal();
             const modal = document.getElementById('galleryDetailModal');
             modal.classList.remove('hidden');
             modal.classList.add('flex');
@@ -26,7 +30,29 @@ async function openGalleryDetail(postId) {
         }
     } catch (error) {
         console.error('Error loading gallery detail:', error);
-        alert('Gagal memuat detail galeri');
+        hideLoadingModal();
+        showNotification('Gagal memuat detail galeri', 'error');
+    }
+}
+
+// Show loading modal
+function showLoadingModal() {
+    const loadingHTML = `
+        <div id="loadingModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
+            <div class="bg-white rounded-lg p-6 flex flex-col items-center">
+                <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+                <p class="mt-4 text-gray-700">Memuat...</p>
+            </div>
+        </div>
+    `;
+    document.body.insertAdjacentHTML('beforeend', loadingHTML);
+}
+
+// Hide loading modal
+function hideLoadingModal() {
+    const loadingModal = document.getElementById('loadingModal');
+    if (loadingModal) {
+        loadingModal.remove();
     }
 }
 
@@ -293,7 +319,21 @@ function handleModalDownload(event) {
     }
     
     const imageUrl = document.getElementById('modalMainImage').src;
+    const galleryId = document.getElementById('modalLikeBtn').dataset.galleryId;
+    
     if (imageUrl) {
+        // Track download to backend
+        if (galleryId) {
+            fetch(`/gallery/${galleryId}/download`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                },
+                body: JSON.stringify({ file_name: imageUrl.split('/').pop() })
+            }).catch(err => console.warn('Download tracking failed:', err));
+        }
+        
         const link = document.createElement('a');
         link.href = imageUrl;
         link.download = 'gallery_image.jpg';
@@ -377,6 +417,20 @@ function downloadFullSizeImage() {
     }
     
     const img = document.getElementById('fullSizeImage');
+    const galleryId = currentGalleryData ? currentGalleryData.id : null;
+    
+    // Track download to backend
+    if (galleryId && img && img.src) {
+        fetch(`/gallery/${galleryId}/download`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+            },
+            body: JSON.stringify({ file_name: img.src.split('/').pop() })
+        }).catch(err => console.warn('Download tracking failed:', err));
+    }
+    
     const link = document.createElement('a');
     link.href = img.src;
     link.download = img.alt || 'gallery-image';
@@ -394,6 +448,20 @@ function downloadPhotoFromGallery(imageUrl, filename) {
         pendingDownloadAction = () => downloadPhotoFromGallery(imageUrl, filename);
         showAuthModal();
         return;
+    }
+    
+    const galleryId = currentGalleryData ? currentGalleryData.id : null;
+    
+    // Track download to backend
+    if (galleryId && imageUrl) {
+        fetch(`/gallery/${galleryId}/download`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+            },
+            body: JSON.stringify({ file_name: filename || imageUrl.split('/').pop() })
+        }).catch(err => console.warn('Download tracking failed:', err));
     }
     
     const link = document.createElement('a');
@@ -415,27 +483,26 @@ async function trackGalleryView(galleryId) {
                 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
             }
         });
-        
+
+        // If CSRF error or other, quietly ignore to avoid UX issues
+        if (!response.ok) return;
         const data = await response.json();
+        if (!data.success) return;
+
+        // Update UI with actual server count (no optimistic update)
+        const modalViewsCount = document.getElementById('modalViewsCount');
+        if (modalViewsCount && data.views_count !== undefined) {
+            modalViewsCount.textContent = data.views_count;
+        }
         
-        if (data.success) {
-            // Update view count in modal if open
-            const modalViewsCount = document.getElementById('modalViewsCount');
-            if (modalViewsCount) {
-                modalViewsCount.textContent = data.views_count;
-            }
-            
-            // Update view count in grid
-            const gridViewCount = document.querySelector(`[data-view-count="${galleryId}"] .view-count-number`);
-            if (gridViewCount) {
-                const formattedCount = data.views_count >= 1000 
-                    ? (data.views_count / 1000).toFixed(1) + 'k' 
-                    : data.views_count;
-                gridViewCount.textContent = formattedCount;
-            }
+        const gridViewCountEl = document.querySelector(`[data-view-count="${galleryId}"] .view-count-number`);
+        if (gridViewCountEl && data.views_count !== undefined) {
+            const count = data.views_count;
+            gridViewCountEl.textContent = count >= 1000 ? (count / 1000).toFixed(1) + 'k' : count;
         }
     } catch (error) {
-        console.error('Error tracking view:', error);
+        // Silently fail; avoid blocking user flow
+        console.warn('View tracking failed:', error);
     }
 }
 

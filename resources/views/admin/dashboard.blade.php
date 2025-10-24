@@ -192,8 +192,11 @@
                 @forelse($recentPosts as $post)
                     <div class="flex items-center space-x-4 py-3 {{ !$loop->last ? 'border-b border-gray-100' : '' }}">
                         @if($post->galery && $post->galery->count() > 0 && $post->galery->first()->foto && $post->galery->first()->foto->count() > 0)
+                            @php
+                                $fotoUtamaDashboard = $post->galery->first()->foto->where('judul', 'Foto Utama')->first() ?? $post->galery->first()->foto->first();
+                            @endphp
                             <div class="w-12 h-12 rounded-lg overflow-hidden">
-                                <img src="{{ asset('storage/posts/' . $post->galery->first()->foto->first()->file) }}" alt="{{ $post->judul }}" class="w-full h-full object-cover">
+                                <img src="{{ asset('storage/posts/' . $fotoUtamaDashboard->file) }}" alt="{{ $post->judul }}" class="w-full h-full object-cover">
                             </div>
                         @else
                             <div class="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">

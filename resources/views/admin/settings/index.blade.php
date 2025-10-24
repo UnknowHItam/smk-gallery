@@ -13,8 +13,8 @@
         <div class="lg:col-span-1">
             <div class="bg-white rounded-lg border border-gray-200 p-6">
                 <div class="text-center">
-                    <div class="w-24 h-24 bg-gradient-to-br from-blue-600 to-blue-700 rounded-full flex items-center justify-center text-white font-bold text-4xl mx-auto shadow-lg">
-                        {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
+                    <div class="w-24 h-24 rounded-full bg-gray-100 border border-gray-200 flex items-center justify-center text-gray-600 mx-auto shadow">
+                        <i class="fas fa-user text-4xl"></i>
                     </div>
                     <h2 class="mt-4 text-xl font-bold text-gray-900">{{ auth()->user()->name }}</h2>
                     <p class="text-sm text-gray-500">{{ auth()->user()->email }}</p>

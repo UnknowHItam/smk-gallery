@@ -244,8 +244,8 @@
         <!-- Brand Section -->
         <div class="sidebar-brand">
             <div class="flex items-center">
-                <div class="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
-                    <i class="fas fa-graduation-cap text-white"></i>
+                <div class="w-10 h-10 rounded-lg overflow-hidden bg-white border border-gray-200 flex items-center justify-center">
+                    <img src="{{ asset('images/logo.png') }}" alt="Logo" class="w-full h-full object-contain p-1">
                 </div>
                 <div class="ml-3">
                     <h1 class="text-lg font-bold text-gray-900">SMK Gallery</h1>
@@ -257,8 +257,8 @@
         <!-- Admin Profile Section (Top) -->
         <div class="px-4 py-4 border-b border-gray-200">
             <button onclick="toggleAdminProfile()" class="w-full flex items-center p-3 hover:bg-gray-50 rounded-lg transition-colors">
-                <div class="w-12 h-12 bg-gradient-to-br from-blue-600 to-blue-700 rounded-lg flex items-center justify-center text-white font-bold text-lg shadow-md">
-                    {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
+                <div class="w-12 h-12 rounded-lg bg-gray-100 border border-gray-200 flex items-center justify-center text-gray-600 shadow-sm">
+                    <i class="fas fa-user text-lg"></i>
                 </div>
                 <div class="ml-3 flex-1 text-left">
                     <p class="text-sm font-semibold text-gray-900">{{ auth()->user()->name }}</p>
@@ -313,6 +313,12 @@
                 <a href="{{ route('admin.users.index') }}" class="nav-item {{ request()->routeIs('admin.users.*') ? 'active' : '' }}">
                     <i class="fas fa-user-shield"></i>
                     <span>Manajemen Pengguna</span>
+                    @php
+                        $newUsers = \App\Models\PublicUser::where('created_at', '>=', now()->subDays(7))->count();
+                    @endphp
+                    @if($newUsers > 0)
+                        <span class="ml-auto bg-blue-500 text-white text-xs px-2 py-1 rounded-full">{{ $newUsers }}</span>
+                    @endif
                 </a>
                 
                 <a href="{{ route('admin.ekstrakurikuler.index') }}" class="nav-item {{ request()->routeIs('admin.ekstrakurikuler.*') ? 'active' : '' }}">
@@ -359,6 +365,91 @@
 
     <!-- Main content -->
     <div class="main-content">
+        <!-- Top Header Bar with Notifications -->
+        <div class="bg-white border-b border-gray-200 px-6 py-4">
+            <div class="flex items-center justify-between">
+                <h1 class="text-xl font-semibold text-gray-900">@yield('title', 'Dashboard')</h1>
+                
+                <!-- Notification Bell -->
+                <div class="relative">
+                    <button onclick="toggleNotifications()" class="relative p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors">
+                        <i class="fas fa-bell text-xl"></i>
+                        @php
+                            $totalNotifications = \App\Models\KritikSaran::where('status', 'unread')->count() + 
+                                                  \App\Models\PublicUser::where('created_at', '>=', now()->subDays(7))->count();
+                        @endphp
+                        @if($totalNotifications > 0)
+                            <span class="absolute top-1 right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
+                                {{ $totalNotifications > 9 ? '9+' : $totalNotifications }}
+                            </span>
+                        @endif
+                    </button>
+                    
+                    <!-- Notification Dropdown -->
+                    <div id="notificationDropdown" class="hidden absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-xl border border-gray-200 z-50">
+                        <div class="p-4 border-b border-gray-200">
+                            <h3 class="font-semibold text-gray-900">Notifikasi</h3>
+                        </div>
+                        <div class="max-h-96 overflow-y-auto">
+                            @php
+                                $unreadFeedback = \App\Models\KritikSaran::where('status', 'unread')->latest()->take(5)->get();
+                                $newUsers = \App\Models\PublicUser::where('created_at', '>=', now()->subDays(7))->latest()->take(5)->get();
+                            @endphp
+                            
+                            @if($unreadFeedback->count() > 0)
+                                @foreach($unreadFeedback as $feedback)
+                                <a href="{{ route('admin.kritik-saran.show', $feedback->id) }}" 
+                                   class="block px-4 py-3 hover:bg-gray-50 border-b border-gray-100 transition-colors notification-item"
+                                   data-type="feedback"
+                                   onclick="markNotificationAsRead(event)">
+                                    <div class="flex items-start gap-3">
+                                        <div class="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center flex-shrink-0">
+                                            <i class="fas fa-envelope text-red-600 text-sm"></i>
+                                        </div>
+                                        <div class="flex-1 min-w-0">
+                                            <p class="text-sm font-medium text-gray-900 truncate">Kritik & Saran Baru</p>
+                                            <p class="text-xs text-gray-600 truncate">{{ $feedback->nama }}</p>
+                                            <p class="text-xs text-gray-400 mt-1">{{ $feedback->created_at->diffForHumans() }}</p>
+                                        </div>
+                                    </div>
+                                </a>
+                                @endforeach
+                            @endif
+                            
+                            @if($newUsers->count() > 0)
+                                @foreach($newUsers as $user)
+                                <a href="{{ route('admin.users.index') }}" class="block px-4 py-3 hover:bg-gray-50 border-b border-gray-100 transition-colors">
+                                    <div class="flex items-start gap-3">
+                                        <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
+                                            <i class="fas fa-user-plus text-blue-600 text-sm"></i>
+                                        </div>
+                                        <div class="flex-1 min-w-0">
+                                            <p class="text-sm font-medium text-gray-900 truncate">User Baru Terdaftar</p>
+                                            <p class="text-xs text-gray-600 truncate">{{ $user->name }}</p>
+                                            <p class="text-xs text-gray-400 mt-1">{{ $user->created_at->diffForHumans() }}</p>
+                                        </div>
+                                    </div>
+                                </a>
+                                @endforeach
+                            @endif
+                            
+                            @if($unreadFeedback->count() == 0 && $newUsers->count() == 0)
+                                <div class="px-4 py-8 text-center text-gray-500">
+                                    <i class="fas fa-bell-slash text-3xl mb-2"></i>
+                                    <p class="text-sm">Tidak ada notifikasi baru</p>
+                                </div>
+                            @endif
+                        </div>
+                        <div class="p-3 border-t border-gray-200 text-center">
+                            <button onclick="closeNotifications()" class="text-sm text-gray-600 hover:text-gray-700 font-medium">
+                                Tutup
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <div class="p-6">
             @if(session('success'))
                 <div class="alert alert-success mb-4">
@@ -390,14 +481,70 @@
             }
         }
 
-        // Close dropdown when clicking outside
-        document.addEventListener('click', function(event) {
-            const dropdown = document.getElementById('adminProfileDropdown');
-            const button = event.target.closest('button[onclick="toggleAdminProfile()"]');
+        function toggleNotifications() {
+            const dropdown = document.getElementById('notificationDropdown');
             
-            if (!button && !dropdown.contains(event.target) && !dropdown.classList.contains('hidden')) {
+            if (dropdown.classList.contains('hidden')) {
+                dropdown.classList.remove('hidden');
+            } else {
                 dropdown.classList.add('hidden');
+            }
+        }
+
+        function closeNotifications() {
+            const dropdown = document.getElementById('notificationDropdown');
+            dropdown.classList.add('hidden');
+        }
+
+        function markNotificationAsRead(event) {
+            // Remove the notification item from dropdown
+            const notifItem = event.currentTarget;
+            notifItem.style.opacity = '0.5';
+            
+            // Update badge counter
+            setTimeout(() => {
+                const badge = document.querySelector('.fa-bell').parentElement.querySelector('span');
+                if (badge) {
+                    const currentCount = parseInt(badge.textContent);
+                    const newCount = Math.max(0, currentCount - 1);
+                    
+                    if (newCount > 0) {
+                        badge.textContent = newCount > 9 ? '9+' : newCount;
+                    } else {
+                        badge.remove();
+                    }
+                }
+                
+                // Update sidebar badge for Kritik & Saran
+                const sidebarBadge = document.querySelector('a[href*="kritik-saran"] span.bg-red-500');
+                if (sidebarBadge && notifItem.dataset.type === 'feedback') {
+                    const currentCount = parseInt(sidebarBadge.textContent);
+                    const newCount = Math.max(0, currentCount - 1);
+                    
+                    if (newCount > 0) {
+                        sidebarBadge.textContent = newCount;
+                    } else {
+                        sidebarBadge.remove();
+                    }
+                }
+            }, 100);
+        }
+
+        // Close dropdowns when clicking outside
+        document.addEventListener('click', function(event) {
+            const profileDropdown = document.getElementById('adminProfileDropdown');
+            const profileButton = event.target.closest('button[onclick="toggleAdminProfile()"]');
+            
+            if (!profileButton && !profileDropdown.contains(event.target) && !profileDropdown.classList.contains('hidden')) {
+                profileDropdown.classList.add('hidden');
                 document.getElementById('adminChevron').style.transform = 'rotate(0deg)';
+            }
+
+            const notifDropdown = document.getElementById('notificationDropdown');
+            const notifButton = event.target.closest('button[onclick="toggleNotifications()"]');
+            
+            if (!notifButton && !notifDropdown.contains(event.target) && !notifDropdown.classList.contains('hidden')) {
+                notifDropdown.classList.add('hidden');
             }
         });
     </script>

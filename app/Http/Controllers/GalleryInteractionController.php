@@ -79,22 +79,23 @@ class GalleryInteractionController extends Controller
     }
 
     /**
-     * Track view (no login required)
+     * Track view (unique per IP address)
      */
     public function trackView(Request $request, $galleryId)
     {
         $ipAddress = $request->ip();
         $userAgent = $request->userAgent();
         
-        // Check if this IP has viewed this gallery in the last 24 hours
-        $recentView = GalleryView::where('gallery_id', $galleryId)
+        // Check if this IP has already viewed this gallery
+        $existingView = GalleryView::where('gallery_id', $galleryId)
             ->where('ip_address', $ipAddress)
-            ->where('viewed_at', '>', now()->subDay())
             ->first();
         
-        if (!$recentView) {
+        // Only create new view if IP hasn't viewed this gallery before
+        if (!$existingView) {
             GalleryView::create([
                 'gallery_id' => $galleryId,
+                'user_id' => null,
                 'ip_address' => $ipAddress,
                 'user_agent' => $userAgent,
                 'viewed_at' => now(),
@@ -106,6 +107,38 @@ class GalleryInteractionController extends Controller
         return response()->json([
             'success' => true,
             'views_count' => $viewsCount
+        ]);
+    }
+
+    /**
+     * Track download (requires login)
+     */
+    public function trackDownload(Request $request, $galleryId)
+    {
+        if (!Auth::guard('public')->check()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Anda harus login untuk mengunduh foto',
+                'redirect' => route('public.login')
+            ], 401);
+        }
+
+        $request->validate([
+            'file_name' => 'nullable|string|max:255',
+        ]);
+
+        GalleryDownload::create([
+            'gallery_id' => $galleryId,
+            'user_id' => Auth::guard('public')->id(),
+            'ip_address' => $request->ip(),
+            'file_name' => $request->input('file_name'),
+        ]);
+
+        $downloadsCount = GalleryDownload::where('gallery_id', $galleryId)->count();
+
+        return response()->json([
+            'success' => true,
+            'downloads_count' => $downloadsCount,
         ]);
     }
 
@@ -171,7 +204,18 @@ class GalleryInteractionController extends Controller
                     'category' => $post->kategori ? $post->kategori->judul : 'Tidak ada kategori',
                     'created_at' => $post->created_at,
                     'photos' => $post->galery->flatMap(function($gallery) {
-                        return $gallery->foto->map(function($photo) {
+                        // Pisahkan foto utama dan foto galeri
+                        $fotoUtama = $gallery->foto->where('judul', 'Foto Utama')->first();
+                        $fotosGaleri = $gallery->foto->where('judul', '!=', 'Foto Utama');
+                        
+                        // Gabungkan dengan foto utama di depan
+                        $allPhotos = collect();
+                        if ($fotoUtama) {
+                            $allPhotos->push($fotoUtama);
+                        }
+                        $allPhotos = $allPhotos->merge($fotosGaleri);
+                        
+                        return $allPhotos->map(function($photo) {
                             return [
                                 'id' => $photo->id,
                                 'file' => $photo->file,

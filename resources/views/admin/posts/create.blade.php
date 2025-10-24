@@ -244,79 +244,38 @@
             }
         });
 
+        // Store selected files
+        let selectedFiles = [];
+        let dataTransfer = new DataTransfer();
+
         // Preview Galeri Lainnya (Multiple)
         document.getElementById('foto-galeri-input').addEventListener('change', function(e) {
             const files = e.target.files;
+            
+            // Add new files to existing selection
+            Array.from(files).forEach(file => {
+                selectedFiles.push(file);
+                dataTransfer.items.add(file);
+            });
+            
+            // Update input with all files
+            this.files = dataTransfer.files;
+            
+            updateGalleryPreview();
+        });
+
+        function updateGalleryPreview() {
             const previewContainer = document.getElementById('preview-galeri-container');
             const fotoPreview = document.getElementById('foto-galeri-preview');
             const countSpan = document.getElementById('galeri-count');
             
             previewContainer.innerHTML = '';
             
-            if (files.length > 0) {
-                // Validate all files
-                let allValid = true;
-                let invalidFiles = [];
-                
-                Array.from(files).forEach((file) => {
-                    if (file.size > MAX_FILE_SIZE) {
-                        allValid = false;
-                        invalidFiles.push({
-                            name: file.name,
-                            size: (file.size / 1024 / 1024).toFixed(2)
-                        });
-                    }
-                });
-                
-                if (!allValid) {
-                    // Show error for invalid files
-                    const errorDiv = document.createElement('div');
-                    errorDiv.className = 'mt-3 p-4 bg-red-50 border-l-4 border-red-500 rounded-lg';
-                    let fileList = invalidFiles.map(f => `<li>${f.name} (${f.size} MB)</li>`).join('');
-                    errorDiv.innerHTML = `
-                        <div class="flex items-start">
-                            <i class="fas fa-exclamation-circle text-red-500 mt-0.5 mr-3"></i>
-                            <div>
-                                <h4 class="font-semibold text-red-800">Beberapa File Terlalu Besar!</h4>
-                                <p class="text-sm text-red-700 mt-1">
-                                    File berikut melebihi ukuran maksimal <strong>${MAX_FILE_SIZE_TEXT}</strong>:
-                                </p>
-                                <ul class="list-disc list-inside text-sm text-red-600 mt-2 ml-2">
-                                    ${fileList}
-                                </ul>
-                                <p class="text-sm text-red-600 mt-2">
-                                    Silakan kompres atau pilih foto dengan ukuran lebih kecil.
-                                </p>
-                            </div>
-                        </div>
-                    `;
-                    
-                    const uploadArea = this.closest('.form-group');
-                    const existingError = uploadArea.querySelector('.file-size-error');
-                    if (existingError) {
-                        existingError.remove();
-                    }
-                    errorDiv.classList.add('file-size-error');
-                    uploadArea.appendChild(errorDiv);
-                    
-                    // Clear the input
-                    this.value = '';
-                    fotoPreview.classList.add('hidden');
-                    countSpan.textContent = '0';
-                    return;
-                }
-                
-                // Remove error message if exists
-                const uploadArea = this.closest('.form-group');
-                const existingError = uploadArea.querySelector('.file-size-error');
-                if (existingError) {
-                    existingError.remove();
-                }
-                
+            if (selectedFiles.length > 0) {
                 fotoPreview.classList.remove('hidden');
-                countSpan.textContent = files.length;
+                countSpan.textContent = selectedFiles.length;
                 
-                Array.from(files).forEach((file, index) => {
+                selectedFiles.forEach((file, index) => {
                     if (file.type.startsWith('image/')) {
                         const reader = new FileReader();
                         reader.onload = function(e) {
@@ -325,10 +284,14 @@
                             div.innerHTML = `
                                 <div class="relative overflow-hidden rounded-xl border-2 border-gray-200 hover:border-green-300 transition-colors">
                                     <img src="${e.target.result}" class="w-full h-32 object-cover">
-                                    <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-200"></div>
+                                    <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all duration-200"></div>
                                     <div class="absolute top-2 left-2 bg-green-600 text-white text-xs px-2 py-1 rounded-full font-semibold">
                                         #${index + 1}
                                     </div>
+                                    <button type="button" onclick="removeGalleryPhoto(${index})" 
+                                            class="absolute top-2 right-2 bg-red-600 hover:bg-red-700 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity shadow-lg">
+                                        <i class="fas fa-trash text-xs"></i>
+                                    </button>
                                 </div>
                                 <input type="text" name="foto_galeri_judul[${index}]" 
                                        placeholder="Judul foto (opsional)" 
@@ -343,7 +306,24 @@
                 fotoPreview.classList.add('hidden');
                 countSpan.textContent = '0';
             }
-        });
+        }
+
+        function removeGalleryPhoto(index) {
+            // Remove from selectedFiles array
+            selectedFiles.splice(index, 1);
+            
+            // Rebuild DataTransfer
+            dataTransfer = new DataTransfer();
+            selectedFiles.forEach(file => {
+                dataTransfer.items.add(file);
+            });
+            
+            // Update input
+            document.getElementById('foto-galeri-input').files = dataTransfer.files;
+            
+            // Update preview
+            updateGalleryPreview();
+        }
 
         // Radio card selection
         document.querySelectorAll('.radio-card input[type="radio"]').forEach(radio => {

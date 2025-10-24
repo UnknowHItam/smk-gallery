@@ -232,48 +232,51 @@
         </div>
     </div>
 
-    <!-- Chart Section -->
-    <div class="card mb-8">
-        <div class="px-6 py-4 border-b border-gray-200">
-            <h2 class="text-lg font-semibold text-gray-900">Grafik Postingan per Bulan</h2>
-        </div>
-        <div class="p-6">
-            <div class="space-y-4">
-                @foreach($labels as $i => $label)
-                    <div class="flex items-center">
-                        <div class="w-24 text-sm font-medium text-gray-700 truncate">{{ $label }}</div>
-                        <div class="flex-1 mx-4">
-                            <div class="bg-gray-200 rounded-full h-4 relative overflow-hidden">
-                                <div class="bg-blue-600 h-4 rounded-full transition-all duration-500" 
-                                     style="width: {{ $data[$i] > 0 ? ($data[$i] / max($data)) * 100 : 0 }}%"></div>
+    <!-- Charts Row: Grafik Postingan (left) and Distribusi Kategori (right) -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        <!-- Chart Section -->
+        <div class="card h-full">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h2 class="text-lg font-semibold text-gray-900">Grafik Postingan per Bulan</h2>
+            </div>
+            <div class="p-6">
+                <div class="space-y-4">
+                    @foreach($labels as $i => $label)
+                        <div class="flex items-center">
+                            <div class="w-24 text-sm font-medium text-gray-700 truncate">{{ $label }}</div>
+                            <div class="flex-1 mx-4">
+                                <div class="bg-gray-200 rounded-full h-4 relative overflow-hidden">
+                                    <div class="bg-blue-600 h-4 rounded-full transition-all duration-500" 
+                                         style="width: {{ $data[$i] > 0 ? ($data[$i] / max($data)) * 100 : 0 }}%"></div>
+                                </div>
                             </div>
+                            <div class="w-12 text-sm font-bold text-gray-900 text-right">{{ $data[$i] }}</div>
                         </div>
-                        <div class="w-12 text-sm font-bold text-gray-900 text-right">{{ $data[$i] }}</div>
-                    </div>
-                @endforeach
+                    @endforeach
+                </div>
             </div>
         </div>
-    </div>
 
-    <!-- Category Distribution -->
-    <div class="card mb-8">
-        <div class="px-6 py-4 border-b border-gray-200">
-            <h2 class="text-lg font-semibold text-gray-900">Distribusi Kategori</h2>
-        </div>
-        <div class="p-6">
-            <div class="space-y-3">
-                @foreach($categories as $category)
-                    <div class="flex items-center">
-                        <div class="w-32 text-sm font-medium text-gray-700 truncate">{{ $category['name'] }}</div>
-                        <div class="flex-1 mx-4">
-                            <div class="bg-gray-200 rounded-full h-3 relative overflow-hidden">
-                                <div class="bg-gradient-to-r from-blue-500 to-indigo-600 h-3 rounded-full transition-all duration-500" 
-                                     style="width: {{ $category['percentage'] }}%"></div>
+        <!-- Category Distribution -->
+        <div class="card h-full">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h2 class="text-lg font-semibold text-gray-900">Distribusi Kategori</h2>
+            </div>
+            <div class="p-6">
+                <div class="space-y-3">
+                    @foreach($categories as $category)
+                        <div class="flex items-center">
+                            <div class="w-32 text-sm font-medium text-gray-700 truncate">{{ $category['name'] }}</div>
+                            <div class="flex-1 mx-4">
+                                <div class="bg-gray-200 rounded-full h-3 relative overflow-hidden">
+                                    <div class="bg-gradient-to-r from-blue-500 to-indigo-600 h-3 rounded-full transition-all duration-500" 
+                                         style="width: {{ $category['percentage'] }}%"></div>
+                                </div>
                             </div>
+                            <div class="w-20 text-sm font-bold text-gray-900 text-right">{{ $category['count'] }} ({{ $category['percentage'] }}%)</div>
                         </div>
-                        <div class="w-20 text-sm font-bold text-gray-900 text-right">{{ $category['count'] }} ({{ $category['percentage'] }}%)</div>
-                    </div>
-                @endforeach
+                    @endforeach
+                </div>
             </div>
         </div>
     </div>
@@ -352,12 +355,43 @@
         </div>
     </div>
 
+    <!-- Top Viewed Posts -->
+    <div class="card mb-8">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <h2 class="text-lg font-semibold text-gray-900 flex items-center">
+                <i class="fas fa-eye text-blue-500 mr-2"></i>
+                Top 5 Konten View Terbanyak
+            </h2>
+        </div>
+        <div class="p-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+                @forelse($topViewedPosts as $index => $post)
+                    <div class="p-4 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg border border-blue-200">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="inline-flex items-center justify-center w-8 h-8 bg-blue-600 text-white rounded-full font-bold text-sm">
+                                {{ $index + 1 }}
+                            </span>
+                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-bold bg-blue-600 text-white">
+                                <i class="fas fa-eye mr-1"></i>
+                                {{ $post->total_views ?? 0 }}
+                            </span>
+                        </div>
+                        <p class="text-sm font-semibold text-gray-900 line-clamp-2 mb-1">{{ $post->judul }}</p>
+                        <p class="text-xs text-gray-600">{{ $post->kategori->judul ?? 'N/A' }}</p>
+                    </div>
+                @empty
+                    <p class="text-sm text-gray-500 text-center py-4 col-span-5">Belum ada data</p>
+                @endforelse
+            </div>
+        </div>
+    </div>
+
     <!-- Top Downloaded Posts -->
     <div class="card mb-8">
         <div class="px-6 py-4 border-b border-gray-200">
             <h2 class="text-lg font-semibold text-gray-900 flex items-center">
                 <i class="fas fa-download text-green-500 mr-2"></i>
-                Top 5 Postingan Paling Banyak Diunduh
+                Top 5 Konten Paling Banyak Diunduh
             </h2>
         </div>
         <div class="p-6">

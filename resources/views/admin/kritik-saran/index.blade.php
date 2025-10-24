@@ -89,18 +89,6 @@
                                class="inline-flex items-center px-3 py-1 border border-blue-300 rounded-md text-xs font-medium text-blue-700 bg-blue-50 hover:bg-blue-100">
                                 <i class="fas fa-eye mr-1"></i> Detail
                             </a>
-                            
-                            @if($item->status === 'unread')
-                                <form action="{{ route('admin.kritik-saran.mark-read', $item->id) }}" 
-                                      method="POST" class="inline">
-                                    @csrf
-                                    @method('PATCH')
-                                    <button type="submit" 
-                                            class="inline-flex items-center px-3 py-1 border border-green-300 rounded-md text-xs font-medium text-green-700 bg-green-50 hover:bg-green-100">
-                                        <i class="fas fa-check mr-1"></i> Tandai Dibaca
-                                    </button>
-                                </form>
-                            @endif
                         </div>
                         
                         <!-- Rating Display (Center) -->
@@ -117,17 +105,11 @@
                             @endif
                         </div>
                         
-                        <form action="{{ route('admin.kritik-saran.destroy', $item->id) }}" 
-                              method="POST" 
-                              class="inline"
-                              onsubmit="return confirm('Apakah Anda yakin ingin menghapus pesan ini?')">
-                            @csrf
-                            @method('DELETE')
-                            <button type="submit" 
-                                    class="inline-flex items-center px-3 py-1 border border-red-300 rounded-md text-xs font-medium text-red-700 bg-red-50 hover:bg-red-100">
-                                <i class="fas fa-trash mr-1"></i> Hapus
-                            </button>
-                        </form>
+                        <button type="button"
+                                class="inline-flex items-center px-3 py-1 border border-red-300 rounded-md text-xs font-medium text-red-700 bg-red-50 hover:bg-red-100"
+                                onclick="confirmDeleteKS({{ $item->id }}, '{{ addslashes($item->nama) }}')">
+                            <i class="fas fa-trash mr-1"></i> Hapus
+                        </button>
                     </div>
                 </div>
             @endforeach
@@ -157,8 +139,101 @@
         </div>
     @endif
 
+    <!-- Delete Confirmation Modal for Kritik & Saran -->
+    <div id="ksDeleteModal" class="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50 hidden">
+        <div class="bg-white rounded-2xl shadow-2xl border border-gray-100 max-w-sm w-full mx-4">
+            <div class="flex items-center justify-between p-6 pb-4">
+                <h3 class="text-xl font-bold text-gray-900">Hapus Pesan</h3>
+                <button type="button" onclick="hideKSModal()" class="text-gray-400 hover:text-gray-600 transition-colors">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            <div class="px-6 pb-6">
+                <p class="text-gray-600 text-sm leading-relaxed mb-6">
+                    Apakah Anda yakin ingin menghapus pesan dari <strong id="ksSenderName" class="text-gray-900"></strong>?
+                    Tindakan ini tidak dapat dibatalkan.
+                </p>
+                <div class="mb-6">
+                    <input type="text" id="ksDeleteConfirmInput" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-700 placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-red-500 focus:border-red-500 transition-all" placeholder="Ketik 'Delete' untuk konfirmasi" autocomplete="off">
+                    <div id="ksDeleteError" class="text-red-500 text-xs mt-2 hidden">
+                        <i class="fas fa-exclamation-circle mr-1"></i>Ketik "Delete" untuk melanjutkan
+                    </div>
+                </div>
+                <form id="ksDeleteForm" method="POST">
+                    @csrf
+                    @method('DELETE')
+                    <div class="flex gap-3">
+                        <button type="button" class="flex-1 px-4 py-3 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-300 transition-all font-medium" onclick="hideKSModal()">Batal</button>
+                        <button type="button" id="ksDeleteButton" class="flex-1 px-4 py-3 bg-gray-300 text-gray-500 rounded-xl focus:outline-none transition-all font-medium disabled:cursor-not-allowed" onclick="submitKSDelete()" disabled>Hapus</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div id="ksDeleteModalBackdrop" class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden"></div>
+
     @push('scripts')
     <script>
+        let currentKSId = null;
+        function confirmDeleteKS(id, senderName) {
+            currentKSId = id;
+            document.getElementById('ksSenderName').textContent = senderName;
+            const input = document.getElementById('ksDeleteConfirmInput');
+            const btn = document.getElementById('ksDeleteButton');
+            const err = document.getElementById('ksDeleteError');
+            if (input) { input.value = ''; input.classList.remove('border-red-500'); input.classList.add('border-gray-200'); }
+            if (btn) { btn.disabled = true; btn.className = 'flex-1 px-4 py-3 bg-gray-300 text-gray-500 rounded-xl focus:outline-none transition-all font-medium disabled:cursor-not-allowed'; }
+            if (err) err.classList.add('hidden');
+            const form = document.getElementById('ksDeleteForm');
+            if (form) form.action = `/admin/kritik-saran/${id}`;
+            document.getElementById('ksDeleteModal').classList.remove('hidden');
+            document.getElementById('ksDeleteModalBackdrop').classList.remove('hidden');
+            setTimeout(() => input && input.focus(), 100);
+        }
+        function hideKSModal() {
+            document.getElementById('ksDeleteModal').classList.add('hidden');
+            document.getElementById('ksDeleteModalBackdrop').classList.add('hidden');
+        }
+        function submitKSDelete() {
+            const input = document.getElementById('ksDeleteConfirmInput');
+            const err = document.getElementById('ksDeleteError');
+            if (!input || input.value !== 'Delete') {
+                if (err) err.classList.remove('hidden');
+                input.classList.remove('border-gray-200');
+                input.classList.add('border-red-500');
+                input.focus();
+                return;
+            }
+            const form = document.getElementById('ksDeleteForm');
+            if (form && form.action) form.submit();
+        }
+        // Backdrop click to close
+        document.addEventListener('click', function(e){ if (e.target && e.target.id === 'ksDeleteModalBackdrop') hideKSModal(); });
+        // Enable delete button when typing 'Delete'
+        document.addEventListener('DOMContentLoaded', function(){
+            const input = document.getElementById('ksDeleteConfirmInput');
+            if (!input) return;
+            input.addEventListener('input', function(){
+                const btn = document.getElementById('ksDeleteButton');
+                const err = document.getElementById('ksDeleteError');
+                if (err) err.classList.add('hidden');
+                this.classList.remove('border-red-500');
+                this.classList.add('border-gray-200');
+                if (btn) {
+                    if (this.value === 'Delete') {
+                        btn.disabled = false;
+                        btn.className = 'flex-1 px-4 py-3 bg-red-600 text-white rounded-xl hover:bg-red-700 focus:outline-none focus:ring-1 focus:ring-red-500 transition-all font-medium';
+                    } else {
+                        btn.disabled = true;
+                        btn.className = 'flex-1 px-4 py-3 bg-gray-300 text-gray-500 rounded-xl focus:outline-none transition-all font-medium disabled:cursor-not-allowed';
+                    }
+                }
+            });
+            input.addEventListener('keypress', function(e){ if (e.key === 'Enter' && this.value === 'Delete') { e.preventDefault(); submitKSDelete(); } });
+        });
+    </script>
         function showFullMessage(id) {
             // This would open a modal or expand the message
             // For now, we'll redirect to the show page

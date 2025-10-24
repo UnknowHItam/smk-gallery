@@ -70,7 +70,10 @@ class HomeController extends Controller
             ->orderBy('nama')
             ->get();
 
-        return view('home', compact('posts', 'beritaPosts', 'kejuaraanPosts', 'eskulPosts', 'agendaPosts', 'agendas', 'ekstrakurikulers'));
+        // Alias untuk backward compatibility
+        $kegiatan = $beritaPosts;
+        
+        return view('home', compact('posts', 'beritaPosts', 'kegiatan', 'kejuaraanPosts', 'eskulPosts', 'agendaPosts', 'agendas', 'ekstrakurikulers'));
     }
 
     public function getAgendaByMonth(Request $request)

@@ -8,10 +8,51 @@
             <h1 class="text-2xl font-bold text-gray-900">Manajemen Konten</h1>
             <p class="mt-1 text-sm text-gray-600">Kelola semua postingan dan konten website</p>
         </div>
-        <div class="mt-4 md:mt-0">
+        <div class="mt-4 md:mt-0 flex gap-2">
+            <button onclick="toggleBulkMode()" id="bulkModeBtn" class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                <i class="fas fa-check-square mr-2"></i> Pilih Item
+            </button>
             <a href="{{ route('admin.posts.create') }}" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
                 <i class="fas fa-plus mr-2"></i> Buat Postingan Baru
             </a>
+        </div>
+    </div>
+
+    <!-- Bulk Actions Toolbar (Hidden by default, fixed at bottom center) -->
+    <div id="bulkActionsToolbar" class="hidden fixed bottom-6 left-1/2 transform -translate-x-1/2 bg-white border-2 border-gray-200 shadow-2xl z-50 rounded-2xl transition-all duration-300">
+        <div class="px-6 py-3 flex items-center gap-4">
+            <button type="button" onclick="toggleBulkMode()" class="flex items-center gap-1.5 text-gray-700 hover:text-gray-900 font-medium text-sm">
+                <i class="fas fa-times"></i>
+                <span>Tutup</span>
+            </button>
+            <div class="h-6 w-px bg-gray-300"></div>
+            <div class="flex items-center gap-1.5">
+                <span class="text-sm font-bold text-gray-900">
+                    <span id="selectedCount">0</span>
+                </span>
+                <span class="text-sm text-gray-600">item dipilih</span>
+            </div>
+            <button type="button" onclick="selectAllPosts()" class="text-sm text-blue-600 hover:text-blue-700 font-medium">
+                Pilih Semua
+            </button>
+            <button type="button" onclick="deselectAllPosts()" class="text-sm text-gray-600 hover:text-gray-700 font-medium">
+                Batal Pilih
+            </button>
+            <div class="h-6 w-px bg-gray-300"></div>
+            <div class="flex items-center gap-2">
+                <button type="button" onclick="bulkPublish()" class="px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 transition-colors shadow-sm flex items-center gap-1.5">
+                    <i class="fas fa-check text-xs"></i>
+                    <span>Publish</span>
+                </button>
+                <button type="button" onclick="bulkUnpublish()" class="px-4 py-2 bg-yellow-600 text-white text-sm font-medium rounded-lg hover:bg-yellow-700 transition-colors shadow-sm flex items-center gap-1.5">
+                    <i class="fas fa-eye-slash text-xs"></i>
+                    <span>Draft</span>
+                </button>
+                <button type="button" onclick="bulkDelete()" class="px-4 py-2 bg-red-600 text-white text-sm font-medium rounded-lg hover:bg-red-700 transition-colors shadow-sm flex items-center gap-1.5">
+                    <i class="fas fa-trash text-xs"></i>
+                    <span>Hapus</span>
+                </button>
+            </div>
         </div>
     </div>
 
@@ -64,11 +105,22 @@
     <!-- Posts Grid -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         @forelse($posts as $post)
-            <div class="bg-white rounded-lg border border-gray-200 overflow-hidden hover:shadow-md transition-shadow">
+            <div class="bg-white rounded-lg border border-gray-200 overflow-hidden hover:shadow-md transition-shadow relative">
+                <!-- Checkbox for bulk selection (hidden by default) -->
+                <div class="absolute top-4 left-4 z-10 bulk-checkbox-container hidden">
+                    <input type="checkbox" 
+                           class="post-checkbox w-5 h-5 text-blue-600 bg-white border-2 border-gray-400 rounded cursor-pointer shadow-lg hover:border-blue-500 transition-colors"
+                           data-post-id="{{ $post->id }}"
+                           onchange="updateBulkToolbar()">
+                </div>
+                
                 <!-- Image -->
                 <div class="aspect-video bg-gray-100">
                     @if($post->galery && $post->galery->count() > 0 && $post->galery->first()->foto && $post->galery->first()->foto->count() > 0)
-                        <img src="{{ asset('storage/posts/' . $post->galery->first()->foto->first()->file) }}" alt="{{ $post->judul }}" class="w-full h-full object-cover">
+                        @php
+                            $fotoUtamaAdmin = $post->galery->first()->foto->where('judul', 'Foto Utama')->first() ?? $post->galery->first()->foto->first();
+                        @endphp
+                        <img src="{{ asset('storage/posts/' . $fotoUtamaAdmin->file) }}" alt="{{ $post->judul }}" class="w-full h-full object-cover">
                     @else
                         <div class="w-full h-full flex items-center justify-center text-gray-400">
                             <i class="fas fa-image text-3xl"></i>
@@ -377,6 +429,148 @@
                 });
             }
         });
+
+        // Bulk Actions JavaScript
+        let bulkModeActive = false;
+
+        function toggleBulkMode() {
+            bulkModeActive = !bulkModeActive;
+            const checkboxContainers = document.querySelectorAll('.bulk-checkbox-container');
+            const toolbar = document.getElementById('bulkActionsToolbar');
+            const bulkModeBtn = document.getElementById('bulkModeBtn');
+            
+            if (bulkModeActive) {
+                // Show checkboxes
+                checkboxContainers.forEach(container => container.classList.remove('hidden'));
+                // Update button
+                bulkModeBtn.innerHTML = '<i class="fas fa-times mr-2"></i> Batal';
+                bulkModeBtn.classList.remove('bg-white', 'text-gray-700', 'border-gray-300');
+                bulkModeBtn.classList.add('bg-red-100', 'text-red-700', 'border-red-300');
+            } else {
+                // Hide checkboxes
+                checkboxContainers.forEach(container => container.classList.add('hidden'));
+                // Uncheck all
+                document.querySelectorAll('.post-checkbox').forEach(cb => cb.checked = false);
+                // Hide toolbar
+                toolbar.classList.add('hidden');
+                // Reset button
+                bulkModeBtn.innerHTML = '<i class="fas fa-check-square mr-2"></i> Pilih Item';
+                bulkModeBtn.classList.remove('bg-red-100', 'text-red-700', 'border-red-300');
+                bulkModeBtn.classList.add('bg-white', 'text-gray-700', 'border-gray-300');
+            }
+        }
+
+        function updateBulkToolbar() {
+            const checkboxes = document.querySelectorAll('.post-checkbox:checked');
+            const toolbar = document.getElementById('bulkActionsToolbar');
+            const countEl = document.getElementById('selectedCount');
+            
+            if (checkboxes.length > 0) {
+                toolbar.classList.remove('hidden');
+                countEl.textContent = checkboxes.length;
+            } else {
+                toolbar.classList.add('hidden');
+            }
+        }
+
+        function selectAllPosts() {
+            document.querySelectorAll('.post-checkbox').forEach(cb => cb.checked = true);
+            updateBulkToolbar();
+        }
+
+        function deselectAllPosts() {
+            document.querySelectorAll('.post-checkbox').forEach(cb => cb.checked = false);
+            updateBulkToolbar();
+        }
+
+        function getSelectedPostIds() {
+            return Array.from(document.querySelectorAll('.post-checkbox:checked'))
+                .map(cb => cb.dataset.postId);
+        }
+
+        async function bulkPublish() {
+            const ids = getSelectedPostIds();
+            if (ids.length === 0) return;
+
+            if (!confirm(`Publish ${ids.length} postingan?`)) return;
+
+            try {
+                const response = await fetch('{{ route("admin.posts.bulk-action") }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    },
+                    body: JSON.stringify({ action: 'publish', ids: ids })
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    window.location.reload();
+                } else {
+                    alert('Gagal: ' + data.message);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Terjadi kesalahan');
+            }
+        }
+
+        async function bulkUnpublish() {
+            const ids = getSelectedPostIds();
+            if (ids.length === 0) return;
+
+            if (!confirm(`Jadikan ${ids.length} postingan sebagai draft?`)) return;
+
+            try {
+                const response = await fetch('{{ route("admin.posts.bulk-action") }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    },
+                    body: JSON.stringify({ action: 'unpublish', ids: ids })
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    window.location.reload();
+                } else {
+                    alert('Gagal: ' + data.message);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Terjadi kesalahan');
+            }
+        }
+
+        async function bulkDelete() {
+            const ids = getSelectedPostIds();
+            if (ids.length === 0) return;
+
+            if (!confirm(`PERHATIAN: Hapus ${ids.length} postingan secara permanen?\n\nTindakan ini tidak dapat dibatalkan!`)) return;
+
+            try {
+                const response = await fetch('{{ route("admin.posts.bulk-action") }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    },
+                    body: JSON.stringify({ action: 'delete', ids: ids })
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    window.location.reload();
+                } else {
+                    alert('Gagal: ' + data.message);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Terjadi kesalahan');
+            }
+        }
     </script>
 @endsection
 

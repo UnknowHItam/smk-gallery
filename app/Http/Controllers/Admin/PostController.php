@@ -7,6 +7,7 @@ use App\Models\Posts;
 use App\Models\Kategori;
 use App\Models\Galery;
 use App\Models\Foto;
+use App\Services\ImageOptimizationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
@@ -101,10 +102,12 @@ class PostController extends Controller
             $filename = 'utama_' . time() . '.' . $fotoUtama->getClientOriginalExtension();
             $fotoUtama->storeAs('posts', $filename, 'public');
 
+            // Insert dengan created_at yang lebih awal dan judul 'Foto Utama' untuk memastikan selalu di posisi pertama
             Foto::create([
                 'galery_id' => $galery->id,
                 'file' => $filename,
-                'judul' => $request->input('foto_utama_judul', 'Foto Utama')
+                'judul' => 'Foto Utama',
+                'created_at' => now()->subYears(10)
             ]);
         }
 
@@ -170,13 +173,16 @@ class PostController extends Controller
             ]);
         }
 
-        // Handle foto utama upload (replace first photo)
+        // Handle foto utama upload
         if ($request->hasFile('foto_utama')) {
-            // Delete old first photo if exists
-            $firstPhoto = $galery->foto()->first();
-            if ($firstPhoto) {
-                Storage::disk('public')->delete('posts/' . $firstPhoto->file);
-                $firstPhoto->delete();
+            // Delete old foto utama (yang punya judul 'Foto Utama')
+            $oldFotoUtama = $galery->foto()
+                ->where('judul', 'Foto Utama')
+                ->first();
+            
+            if ($oldFotoUtama) {
+                Storage::disk('public')->delete('posts/' . $oldFotoUtama->file);
+                $oldFotoUtama->delete();
             }
 
             // Upload new foto utama
@@ -184,11 +190,12 @@ class PostController extends Controller
             $filename = 'utama_' . time() . '.' . $fotoUtama->getClientOriginalExtension();
             $fotoUtama->storeAs('posts', $filename, 'public');
 
-            // Insert at the beginning
+            // Insert dengan created_at yang lebih awal untuk memastikan selalu di posisi pertama
             Foto::create([
                 'galery_id' => $galery->id,
                 'file' => $filename,
-                'judul' => $request->input('foto_utama_judul', 'Foto Utama')
+                'judul' => 'Foto Utama',
+                'created_at' => now()->subYears(10)
             ]);
         }
 
@@ -274,5 +281,63 @@ class PostController extends Controller
         }
 
         return view('admin.posts.stats', compact('post', 'likes', 'shares', 'downloads'));
+    }
+
+    public function bulkAction(Request $request)
+    {
+        $request->validate([
+            'action' => 'required|in:publish,unpublish,delete',
+            'ids' => 'required|array',
+            'ids.*' => 'exists:posts,id'
+        ]);
+
+        $action = $request->action;
+        $ids = $request->ids;
+
+        try {
+            switch ($action) {
+                case 'publish':
+                    Posts::whereIn('id', $ids)->update(['status' => 'published']);
+                    $message = count($ids) . ' postingan berhasil dipublish';
+                    break;
+
+                case 'unpublish':
+                    Posts::whereIn('id', $ids)->update(['status' => 'draft']);
+                    $message = count($ids) . ' postingan berhasil dijadikan draft';
+                    break;
+
+                case 'delete':
+                    // Delete related photos and galleries first
+                    $posts = Posts::whereIn('id', $ids)->with('galery.foto')->get();
+                    
+                    foreach ($posts as $post) {
+                        foreach ($post->galery as $gallery) {
+                            // Delete photos from storage
+                            foreach ($gallery->foto as $foto) {
+                                Storage::disk('public')->delete('posts/' . $foto->file);
+                            }
+                            // Delete photo records
+                            $gallery->foto()->delete();
+                        }
+                        // Delete gallery records
+                        $post->galery()->delete();
+                    }
+                    
+                    // Delete posts
+                    Posts::whereIn('id', $ids)->delete();
+                    $message = count($ids) . ' postingan berhasil dihapus';
+                    break;
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => $message
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Terjadi kesalahan: ' . $e->getMessage()
+            ], 500);
+        }
     }
 }

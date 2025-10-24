@@ -250,12 +250,15 @@
                         </a>
                     </div>
                     
-                    @if($beritaPosts->count() > 0)
-                        @foreach($beritaPosts as $index => $post)
+                    @if($kegiatan->count() > 0)
+                        @foreach($kegiatan as $index => $post)
                             <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center {{ $index > 0 ? 'mt-8' : '' }}">
                                 <div class="aspect-video rounded-2xl overflow-hidden">
                                     @if($post->galery->count() > 0 && $post->galery->first()->foto->count() > 0)
-                                        <img src="{{ asset('storage/posts/' . $post->galery->first()->foto->first()->file) }}" 
+                                        @php
+                                            $fotoUtama = $post->galery->first()->foto->where('judul', 'Foto Utama')->first() ?? $post->galery->first()->foto->first();
+                                        @endphp
+                                        <img src="{{ asset('storage/posts/' . $fotoUtama->file) }}" 
                                              alt="{{ $post->judul }}" 
                                              class="w-full h-full object-cover">
                                     @else
@@ -302,7 +305,10 @@
                             <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center {{ $index > 0 ? 'mt-8' : '' }}">
                                 <div class="aspect-video rounded-2xl overflow-hidden">
                                     @if($post->galery->count() > 0 && $post->galery->first()->foto->count() > 0)
-                                        <img src="{{ asset('storage/posts/' . $post->galery->first()->foto->first()->file) }}" 
+                                        @php
+                                            $fotoUtama = $post->galery->first()->foto->where('judul', 'Foto Utama')->first() ?? $post->galery->first()->foto->first();
+                                        @endphp
+                                        <img src="{{ asset('storage/posts/' . $fotoUtama->file) }}" 
                                              alt="{{ $post->judul }}" 
                                              class="w-full h-full object-cover">
                                     @else
@@ -349,7 +355,10 @@
                             <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center {{ $index > 0 ? 'mt-8' : '' }}">
                                 <div class="aspect-video rounded-2xl overflow-hidden">
                                     @if($post->galery->count() > 0 && $post->galery->first()->foto->count() > 0)
-                                        <img src="{{ asset('storage/posts/' . $post->galery->first()->foto->first()->file) }}" 
+                                        @php
+                                            $fotoUtama = $post->galery->first()->foto->where('judul', 'Foto Utama')->first() ?? $post->galery->first()->foto->first();
+                                        @endphp
+                                        <img src="{{ asset('storage/posts/' . $fotoUtama->file) }}" 
                                              alt="{{ $post->judul }}" 
                                              class="w-full h-full object-cover">
                                     @else
@@ -396,7 +405,10 @@
                             <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center {{ $index > 0 ? 'mt-8' : '' }}">
                                 <div class="aspect-video rounded-2xl overflow-hidden">
                                     @if($post->galery->count() > 0 && $post->galery->first()->foto->count() > 0)
-                                        <img src="{{ asset('storage/posts/' . $post->galery->first()->foto->first()->file) }}" 
+                                        @php
+                                            $fotoUtama = $post->galery->first()->foto->where('judul', 'Foto Utama')->first() ?? $post->galery->first()->foto->first();
+                                        @endphp
+                                        <img src="{{ asset('storage/posts/' . $fotoUtama->file) }}" 
                                              alt="{{ $post->judul }}" 
                                              class="w-full h-full object-cover">
                                     @else
@@ -456,7 +468,10 @@
                                     <!-- Image Container -->
                                     <div class="aspect-[4/3] relative overflow-hidden">
                                         @if($post->galery->count() > 0 && $post->galery->first()->foto->count() > 0)
-                                            <img src="{{ asset('storage/posts/' . $post->galery->first()->foto->first()->file) }}" 
+                                            @php
+                                                $fotoUtamaRecent = $post->galery->first()->foto->where('judul', 'Foto Utama')->first() ?? $post->galery->first()->foto->first();
+                                            @endphp
+                                            <img src="{{ asset('storage/posts/' . $fotoUtamaRecent->file) }}" 
                                                  alt="{{ $post->judul }}" 
                                                  class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
                                         @else

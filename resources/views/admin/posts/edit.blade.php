@@ -103,8 +103,10 @@
                 
                 @php
                     $fotos = $post->galery->count() > 0 ? $post->galery->first()->foto : collect();
-                    $fotoUtama = $fotos->first();
-                    $fotosGaleri = $fotos->skip(1);
+                    // Foto utama adalah yang punya judul 'Foto Utama'
+                    $fotoUtama = $fotos->where('judul', 'Foto Utama')->first();
+                    // Foto galeri adalah semua foto kecuali foto utama
+                    $fotosGaleri = $fotos->where('judul', '!=', 'Foto Utama');
                 @endphp
 
                 <!-- Foto Utama Saat Ini -->

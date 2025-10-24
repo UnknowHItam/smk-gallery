@@ -1,6 +1,9 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
+@extends('layouts.app')
+
+@section('content')
+<!-- Public Profile page content starts here -->
+<div class="public-profile-wrapper">
+<head style="display:none;">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
@@ -397,5 +400,6 @@
             }
         });
     </script>
-</body>
-</html>
+</div>
+<!-- Public Profile page content ends here -->
+@endsection

@@ -94,6 +94,7 @@ require __DIR__.'/auth.php';
 // Admin routes
 Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/', [AdminDashboardController::class, 'index'])->name('dashboard');
+    Route::post('posts/bulk-action', [AdminPostController::class, 'bulkAction'])->name('posts.bulk-action');
     Route::resource('posts', AdminPostController::class)->except(['show']);
     Route::get('posts/{post}/stats', [AdminPostController::class, 'stats'])->name('posts.stats');
     Route::delete('fotos/{foto}', [AdminPostController::class, 'deletePhoto'])->name('fotos.destroy');
@@ -120,16 +121,25 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::delete('users/{id}', [AdminUserManagementController::class, 'destroy'])->name('users.destroy');
 });
 
-// Gallery Interaction Routes (API-like)
-Route::prefix('gallery/{galleryId}')->group(function () {
-    // Like (requires login)
-    Route::post('/like', [GalleryInteractionController::class, 'toggleLike'])->name('gallery.like');
+// Gallery Interaction Routes (API-like) with rate limiting
+Route::prefix('gallery/{galleryId}')->middleware('throttle:60,1')->group(function () {
+    // Like (requires login) - 30 requests per minute
+    Route::post('/like', [GalleryInteractionController::class, 'toggleLike'])
+        ->middleware('throttle:30,1')
+        ->name('gallery.like');
     
-    // View (no login required)
+    // View (no login required) - 60 requests per minute
     Route::post('/view', [GalleryInteractionController::class, 'trackView'])->name('gallery.view');
     
-    // Share (no login required)
-    Route::post('/share', [GalleryInteractionController::class, 'trackShare'])->name('gallery.share');
+    // Share (no login required) - 30 requests per minute
+    Route::post('/share', [GalleryInteractionController::class, 'trackShare'])
+        ->middleware('throttle:30,1')
+        ->name('gallery.share');
+    
+    // Download (requires login) - 20 requests per minute
+    Route::post('/download', [GalleryInteractionController::class, 'trackDownload'])
+        ->middleware('throttle:20,1')
+        ->name('gallery.download');
     
     // Stats
     Route::get('/stats', [GalleryInteractionController::class, 'getStats'])->name('gallery.stats');

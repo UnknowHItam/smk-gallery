@@ -1,6 +1,9 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
+@extends('layouts.app')
+
+@section('content')
+<!-- Gallery page content starts here -->
+<div class="gallery-page-wrapper">
+<head style="display:none;">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
@@ -291,16 +294,12 @@
         </div>
     </header>
 
-    <!-- Spacer untuk mengkompensasi fixed navbar -->
-    <div class="h-16"></div>
-
-
     <!-- Enhanced Hero Section - Half Page with Popular Posts -->
     <section class="relative bg-white overflow-hidden" style="min-height: 50vh;">
         <!-- Subtle Background -->
         <div class="absolute inset-0 bg-gradient-to-br from-gray-50 via-blue-50/30 to-indigo-50/20"></div>
 
-        <div class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
+        <div class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-8">
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
                 <!-- Main Hero Section - 2/3 width -->
                 <div class="lg:col-span-2">
@@ -378,7 +377,10 @@
                                         <!-- Thumbnail -->
                                         <div class="flex-shrink-0 w-16 h-16 rounded-xl overflow-hidden bg-gray-100">
                                             @if($popular->galery->count() > 0 && $popular->galery->first()->foto->count() > 0)
-                                                <img src="{{ asset('storage/posts/' . $popular->galery->first()->foto->first()->file) }}" 
+                                                @php
+                                                    $fotoUtamaPopular = $popular->galery->first()->foto->where('judul', 'Foto Utama')->first() ?? $popular->galery->first()->foto->first();
+                                                @endphp
+                                                <img src="{{ asset('storage/posts/' . $fotoUtamaPopular->file) }}" 
                                                      alt="{{ $popular->judul }}" 
                                                      class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300">
                                             @else
@@ -421,13 +423,30 @@
         </div>
     </section>
 
-
-
     <!-- Enhanced Main Content with Masonry Layout -->
-    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-12">
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-8">
         @if($posts->count() > 0)
-            <!-- Modern Masonry Grid -->
-            <div id="galleryGrid" class="columns-1 md:columns-2 lg:columns-4 gap-6 lg:gap-8 space-y-6 lg:space-y-8">
+            <!-- Gallery Grid: ensure 4 columns on large screens -->
+            <!-- Skeleton Loading (hidden by default, shown via JS if needed) -->
+            <div id="skeletonLoader" class="hidden grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8">
+                @for($i = 0; $i < 8; $i++)
+                <div class="bg-white rounded-2xl overflow-hidden shadow-sm animate-pulse">
+                    <div class="aspect-[4/3] bg-gray-200"></div>
+                    <div class="p-5 space-y-3">
+                        <div class="h-4 bg-gray-200 rounded w-3/4"></div>
+                        <div class="h-3 bg-gray-200 rounded w-full"></div>
+                        <div class="h-3 bg-gray-200 rounded w-5/6"></div>
+                        <div class="flex items-center gap-4 pt-2">
+                            <div class="h-3 bg-gray-200 rounded w-16"></div>
+                            <div class="h-3 bg-gray-200 rounded w-16"></div>
+                            <div class="h-3 bg-gray-200 rounded w-16"></div>
+                        </div>
+                    </div>
+                </div>
+                @endfor
+            </div>
+
+            <div id="galleryGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8">
                 @foreach($posts as $post)
                     <article
                         class="group break-inside-avoid mb-6 lg:mb-8"
@@ -436,13 +455,16 @@
                         data-post-json='@json($post)'
                         style="cursor: pointer;"
                     >
-                        <div class="bg-white rounded-2xl overflow-hidden transform hover:-translate-y-1 transition-all duration-300 shadow-sm hover:shadow-xl">
+                        <div class="bg-white rounded-2xl overflow-hidden transform hover:-translate-y-1 transition-all duration-300 shadow-md hover:shadow-2xl border border-gray-100">
                             <!-- Enhanced Image Container with Dynamic Height -->
-                            <div class="relative overflow-hidden bg-gradient-to-br from-blue-50 to-indigo-50">
+                            <div class="relative overflow-hidden bg-gradient-to-br from-blue-50 to-indigo-50 rounded-t-2xl">
                                 @if($post->galery->count() > 0 && $post->galery->first()->foto->count() > 0)
-                                    <img src="{{ asset('storage/posts/' . $post->galery->first()->foto->first()->file) }}"
+                                    @php
+                                        $fotoUtama = $post->galery->first()->foto->where('judul', 'Foto Utama')->first() ?? $post->galery->first()->foto->first();
+                                    @endphp
+                                    <img src="{{ asset('storage/posts/' . $fotoUtama->file) }}"
                                          alt="{{ $post->judul }}"
-                                         class="w-full h-auto object-cover group-hover:scale-110 transition-transform duration-700"
+                                         class="w-full h-auto object-cover group-hover:scale-110 transition-transform duration-700 rounded-t-2xl"
                                          loading="lazy">
                                 @else
                                     <div class="w-full aspect-[4/3] bg-gradient-to-br from-blue-100 to-indigo-100 flex items-center justify-center">
@@ -2088,5 +2110,6 @@
 
     <!-- Include Gallery Detail Modal JavaScript -->
     <script src="{{ asset('js/gallery-detail-modal.js') }}?v={{ time() }}"></script>
-</body>
-</html>
+</div>
+<!-- Gallery page content ends here -->
+@endsection
