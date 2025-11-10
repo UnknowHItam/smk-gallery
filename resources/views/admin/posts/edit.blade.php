@@ -154,43 +154,46 @@
                     </div>
                 @endif
 
-                <!-- Upload Foto Utama Baru -->
-                <div class="form-group mt-6">
-                    <label class="form-label">{{ $fotoUtama ? 'Ganti Foto Utama' : 'Upload Foto Utama' }}</label>
-                    <p class="text-sm text-gray-600 mb-3">Upload 1 foto sebagai thumbnail utama postingan</p>
-                    <div class="file-upload-area" onclick="document.getElementById('foto-utama-input').click()">
-                        <div class="text-center py-6">
-                            <i class="fas fa-image text-3xl text-blue-400 mb-3"></i>
-                            <p class="text-base font-medium text-gray-700 mb-1">Klik untuk upload foto utama</p>
-                            <p class="text-xs text-gray-400 mt-1">Maksimal 100MB, format: JPG, PNG, GIF</p>
+                <!-- Upload Foto - Grid Layout 2 Kolom -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+                    <!-- Upload Foto Utama -->
+                    <div class="form-group">
+                        <label class="form-label">{{ $fotoUtama ? 'Ganti Foto Utama' : 'Upload Foto Utama' }}</label>
+                        <p class="text-sm text-gray-600 mb-3">Upload 1 foto sebagai thumbnail utama postingan</p>
+                        <div class="file-upload-area" onclick="document.getElementById('foto-utama-input').click()">
+                            <div class="text-center py-6">
+                                <i class="fas fa-image text-3xl text-blue-400 mb-3"></i>
+                                <p class="text-base font-medium text-gray-700 mb-1">Klik untuk upload foto utama</p>
+                                <p class="text-xs text-gray-400 mt-1">Maksimal 100MB, format: JPG, PNG, GIF</p>
+                            </div>
+                        </div>
+                        <input type="file" id="foto-utama-input" name="foto_utama" accept="image/*" class="hidden">
+                        
+                        <div id="foto-utama-preview" class="hidden mt-3">
+                            <label class="form-label">Preview Foto Utama Baru</label>
+                            <div id="preview-utama-container" class="max-w-sm"></div>
                         </div>
                     </div>
-                    <input type="file" id="foto-utama-input" name="foto_utama" accept="image/*" class="hidden">
-                </div>
 
-                <div id="foto-utama-preview" class="hidden mt-3">
-                    <label class="form-label">Preview Foto Utama Baru</label>
-                    <div id="preview-utama-container" class="max-w-sm"></div>
-                </div>
-
-                <!-- Upload Galeri Lainnya Baru -->
-                <div class="form-group mt-6">
-                    <label class="form-label">Tambah Foto ke Galeri Lainnya</label>
-                    <p class="text-sm text-gray-600 mb-3">Upload banyak foto untuk menambah ke galeri (opsional)</p>
-                    <div class="file-upload-area" onclick="document.getElementById('foto-galeri-input').click()">
-                        <div class="text-center py-6">
-                            <i class="fas fa-images text-3xl text-green-400 mb-3"></i>
-                            <p class="text-base font-medium text-gray-700 mb-1">Klik untuk upload banyak foto</p>
-                            <p class="text-xs text-gray-500">atau drag & drop file di sini</p>
-                            <p class="text-xs text-gray-400 mt-1">Bisa pilih banyak foto sekaligus - Maksimal 100MB per foto</p>
+                    <!-- Upload Galeri Lainnya -->
+                    <div class="form-group">
+                        <label class="form-label">Tambah Foto ke Galeri Lainnya</label>
+                        <p class="text-sm text-gray-600 mb-3">Upload banyak foto untuk menambah ke galeri (opsional)</p>
+                        <div class="file-upload-area" onclick="document.getElementById('foto-galeri-input').click()">
+                            <div class="text-center py-6">
+                                <i class="fas fa-images text-3xl text-green-400 mb-3"></i>
+                                <p class="text-base font-medium text-gray-700 mb-1">Klik untuk upload banyak foto</p>
+                                <p class="text-xs text-gray-500">atau drag & drop file di sini</p>
+                                <p class="text-xs text-gray-400 mt-1">Bisa pilih banyak foto sekaligus - Maksimal 100MB per foto</p>
+                            </div>
+                        </div>
+                        <input type="file" id="foto-galeri-input" name="fotos_galeri[]" multiple accept="image/*" class="hidden">
+                        
+                        <div id="foto-galeri-preview" class="hidden mt-3">
+                            <label class="form-label">Preview Foto Baru</label>
+                            <div id="preview-container" class="grid grid-cols-2 gap-4"></div>
                         </div>
                     </div>
-                    <input type="file" id="foto-galeri-input" name="fotos_galeri[]" multiple accept="image/*" class="hidden">
-                </div>
-
-                <div id="foto-galeri-preview" class="hidden mt-3">
-                    <label class="form-label">Preview Foto Baru</label>
-                    <div id="preview-container" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"></div>
                 </div>
             </div>
         </div>
@@ -346,13 +349,14 @@
             }
         });
 
-        // Preview Galeri Lainnya (Multiple)
+        // Store selected files for galeri
+        let galeriFiles = [];
+        
+        // Preview Galeri Lainnya (Multiple) - Support incremental upload
         document.getElementById('foto-galeri-input').addEventListener('change', function(e) {
             const files = e.target.files;
             const previewContainer = document.getElementById('preview-container');
             const fotoPreview = document.getElementById('foto-galeri-preview');
-            
-            previewContainer.innerHTML = '';
             
             if (files.length > 0) {
                 // Validate all files
@@ -402,7 +406,6 @@
                     
                     // Clear the input
                     this.value = '';
-                    fotoPreview.classList.add('hidden');
                     return;
                 }
                 
@@ -415,33 +418,82 @@
                 
                 fotoPreview.classList.remove('hidden');
                 
-                Array.from(files).forEach((file, index) => {
+                // Add new files to existing array
+                Array.from(files).forEach((file) => {
                     if (file.type.startsWith('image/')) {
-                        const reader = new FileReader();
-                        reader.onload = function(e) {
-                            const div = document.createElement('div');
-                            div.className = 'relative group';
-                            div.innerHTML = `
-                                <div class="relative overflow-hidden rounded-xl border-2 border-gray-200 hover:border-green-300 transition-colors">
-                                    <img src="${e.target.result}" class="w-full h-32 object-cover">
-                                    <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-200"></div>
-                                    <div class="absolute top-2 left-2 bg-green-600 text-white text-xs px-2 py-1 rounded-full font-semibold">
-                                        #${index + 1}
-                                    </div>
-                                </div>
-                                <input type="text" name="foto_galeri_judul[${index}]" 
-                                       placeholder="Judul foto (opsional)" 
-                                       class="w-full mt-2 text-sm form-input">
-                            `;
-                            previewContainer.appendChild(div);
-                        };
-                        reader.readAsDataURL(file);
+                        galeriFiles.push(file);
                     }
                 });
-            } else {
-                fotoPreview.classList.add('hidden');
+                
+                // Re-render all previews
+                renderGaleriPreviews();
             }
+            
+            // Clear input to allow selecting same file again
+            this.value = '';
         });
+        
+        // Function to render galeri previews with delete buttons
+        function renderGaleriPreviews() {
+            const previewContainer = document.getElementById('preview-container');
+            previewContainer.innerHTML = '';
+            
+            galeriFiles.forEach((file, index) => {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const div = document.createElement('div');
+                    div.className = 'relative group';
+                    div.dataset.fileIndex = index;
+                    div.innerHTML = `
+                        <div class="relative overflow-hidden rounded-xl border-2 border-gray-200 hover:border-green-300 transition-colors">
+                            <img src="${e.target.result}" class="w-full h-32 object-cover">
+                            <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-200"></div>
+                            <div class="absolute top-2 left-2 bg-green-600 text-white text-xs px-2 py-1 rounded-full font-semibold">
+                                #${index + 1}
+                            </div>
+                            <button type="button" onclick="removeGaleriFile(${index})" 
+                                    class="absolute top-2 right-2 bg-red-600 hover:bg-red-700 text-white rounded-full w-6 h-6 flex items-center justify-center transition-colors shadow-lg opacity-0 group-hover:opacity-100">
+                                <i class="fas fa-times text-xs"></i>
+                            </button>
+                        </div>
+                        <input type="text" class="galeri-judul-input w-full mt-2 text-sm form-input" 
+                               data-index="${index}"
+                               placeholder="Judul foto (opsional)">
+                    `;
+                    previewContainer.appendChild(div);
+                };
+                reader.readAsDataURL(file);
+            });
+            
+            // Update file input with current files
+            updateGaleriFileInput();
+        }
+        
+        // Function to remove file from galeri
+        function removeGaleriFile(index) {
+            galeriFiles.splice(index, 1);
+            renderGaleriPreviews();
+            
+            // Hide preview section if no files
+            if (galeriFiles.length === 0) {
+                document.getElementById('foto-galeri-preview').classList.add('hidden');
+            }
+        }
+        
+        // Function to update file input with current files
+        function updateGaleriFileInput() {
+            const input = document.getElementById('foto-galeri-input');
+            const dt = new DataTransfer();
+            
+            galeriFiles.forEach(file => {
+                dt.items.add(file);
+            });
+            
+            input.files = dt.files;
+        }
+        
+        // Make removeGaleriFile available globally
+        window.removeGaleriFile = removeGaleriFile;
 
         // Modal functions
         let currentFotoId = null;

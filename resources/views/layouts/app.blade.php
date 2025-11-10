@@ -26,6 +26,13 @@
                 </div>
 
                 <div class="flex items-center gap-3">
+                    <!-- Mobile Menu Button -->
+                    <button id="mobileNavToggle" class="md:hidden p-2 hover:bg-gray-100 rounded-lg">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                        </svg>
+                    </button>
+                    
                     <nav class="hidden md:flex items-center gap-6 text-sm mr-4">
                         <a href="{{ route('home') }}" class="hover:text-blue-700 flex items-center gap-2"><span class="inline-block">🏠</span> Beranda</a>
                         <a href="{{ route('gallery') }}" class="hover:text-blue-700 flex items-center gap-2"><span class="inline-block">🖼️</span> Gallery</a>
@@ -63,6 +70,24 @@
                             </button>
                         </div>
                     @endauth
+                </div>
+            </div>
+            
+            <!-- Mobile Menu Dropdown -->
+            <div id="mobileNavMenu" class="hidden md:hidden bg-white border-t border-gray-200">
+                <div class="px-4 py-4 space-y-2">
+                    <a href="{{ route('home') }}" class="block px-4 py-2 hover:bg-gray-100 rounded-lg flex items-center gap-2">
+                        <span class="inline-block">🏠</span> Beranda
+                    </a>
+                    <a href="{{ route('gallery') }}" class="block px-4 py-2 hover:bg-gray-100 rounded-lg flex items-center gap-2">
+                        <span class="inline-block">🖼️</span> Gallery
+                    </a>
+                    <a href="#berita" class="block px-4 py-2 hover:bg-gray-100 rounded-lg flex items-center gap-2">
+                        <span class="inline-block">🎯</span> Kegiatan
+                    </a>
+                    <a href="#kontak" class="block px-4 py-2 hover:bg-gray-100 rounded-lg flex items-center gap-2">
+                        <span class="inline-block">✉️</span> Kontak
+                    </a>
                 </div>
             </div>
         </div>
@@ -907,6 +932,25 @@
                 }, 3000);
             }
 
+            // Mobile Nav Toggle
+            const mobileNavToggle = document.getElementById('mobileNavToggle');
+            const mobileNavMenu = document.getElementById('mobileNavMenu');
+            
+            if (mobileNavToggle) {
+                mobileNavToggle.addEventListener('click', function() {
+                    mobileNavMenu.classList.toggle('hidden');
+                });
+            }
+            
+            // Close mobile nav when clicking outside
+            document.addEventListener('click', function(event) {
+                if (mobileNavMenu && !mobileNavMenu.classList.contains('hidden')) {
+                    if (!event.target.closest('#mobileNavToggle') && !event.target.closest('#mobileNavMenu')) {
+                        mobileNavMenu.classList.add('hidden');
+                    }
+                }
+            });
+            
             // Event Listeners
             if (burgerMenu) {
                 burgerMenu.addEventListener('click', toggleFloatingMenu);

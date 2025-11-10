@@ -99,43 +99,46 @@
             <div class="form-section">
                 <h3 class="form-section-title">Media</h3>
                 
-                <!-- Foto Utama -->
-                <div class="form-group">
-                    <label class="form-label">Foto Utama (Thumbnail) <span class="text-red-500">*</span></label>
-                    <p class="text-sm text-gray-600 mb-3">Upload 1 foto sebagai thumbnail utama postingan</p>
-                    <div class="file-upload-area" onclick="document.getElementById('foto-utama-input').click()">
-                        <div class="text-center py-6">
-                            <i class="fas fa-image text-3xl text-blue-400 mb-3"></i>
-                            <p class="text-base font-medium text-gray-700 mb-1">Klik untuk upload foto utama</p>
-                            <p class="text-xs text-gray-400 mt-1">Maksimal 100MB, format: JPG, PNG, GIF</p>
+                <!-- Upload Foto - Grid Layout 2 Kolom -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Foto Utama -->
+                    <div class="form-group">
+                        <label class="form-label">Foto Utama (Thumbnail) <span class="text-red-500">*</span></label>
+                        <p class="text-sm text-gray-600 mb-3">Upload 1 foto sebagai thumbnail utama postingan</p>
+                        <div class="file-upload-area" onclick="document.getElementById('foto-utama-input').click()">
+                            <div class="text-center py-6">
+                                <i class="fas fa-image text-3xl text-blue-400 mb-3"></i>
+                                <p class="text-base font-medium text-gray-700 mb-1">Klik untuk upload foto utama</p>
+                                <p class="text-xs text-gray-400 mt-1">Maksimal 100MB, format: JPG, PNG, GIF</p>
+                            </div>
+                        </div>
+                        <input type="file" id="foto-utama-input" name="foto_utama" accept="image/*" class="hidden" required>
+                        
+                        <div id="foto-utama-preview" class="hidden mt-3">
+                            <label class="form-label">Preview Foto Utama</label>
+                            <div id="preview-utama-container" class="max-w-sm"></div>
                         </div>
                     </div>
-                    <input type="file" id="foto-utama-input" name="foto_utama" accept="image/*" class="hidden" required>
-                </div>
 
-                <div id="foto-utama-preview" class="hidden mt-3">
-                    <label class="form-label">Preview Foto Utama</label>
-                    <div id="preview-utama-container" class="max-w-sm"></div>
-                </div>
-
-                <!-- Galeri Lainnya -->
-                <div class="form-group mt-6">
-                    <label class="form-label">Galeri Lainnya (Multiple Foto)</label>
-                    <p class="text-sm text-gray-600 mb-3">Upload banyak foto untuk galeri tambahan (opsional)</p>
-                    <div class="file-upload-area" onclick="document.getElementById('foto-galeri-input').click()">
-                        <div class="text-center py-6">
-                            <i class="fas fa-images text-3xl text-green-400 mb-3"></i>
-                            <p class="text-base font-medium text-gray-700 mb-1">Klik untuk upload banyak foto</p>
-                            <p class="text-xs text-gray-500">atau drag & drop file di sini</p>
-                            <p class="text-xs text-gray-400 mt-1">Bisa pilih banyak foto sekaligus - Maksimal 100MB per foto</p>
+                    <!-- Galeri Lainnya -->
+                    <div class="form-group">
+                        <label class="form-label">Galeri Lainnya (Multiple Foto)</label>
+                        <p class="text-sm text-gray-600 mb-3">Upload banyak foto untuk galeri tambahan (opsional)</p>
+                        <div class="file-upload-area" onclick="document.getElementById('foto-galeri-input').click()">
+                            <div class="text-center py-6">
+                                <i class="fas fa-images text-3xl text-green-400 mb-3"></i>
+                                <p class="text-base font-medium text-gray-700 mb-1">Klik untuk upload banyak foto</p>
+                                <p class="text-xs text-gray-500">atau drag & drop file di sini</p>
+                                <p class="text-xs text-gray-400 mt-1">Bisa pilih banyak foto sekaligus - Maksimal 100MB per foto</p>
+                            </div>
+                        </div>
+                        <input type="file" id="foto-galeri-input" name="fotos_galeri[]" multiple accept="image/*" class="hidden">
+                        
+                        <div id="foto-galeri-preview" class="hidden mt-3">
+                            <label class="form-label">Preview Galeri Lainnya (<span id="galeri-count">0</span> foto)</label>
+                            <div id="preview-galeri-container" class="grid grid-cols-2 gap-4"></div>
                         </div>
                     </div>
-                    <input type="file" id="foto-galeri-input" name="fotos_galeri[]" multiple accept="image/*" class="hidden">
-                </div>
-
-                <div id="foto-galeri-preview" class="hidden mt-3">
-                    <label class="form-label">Preview Galeri Lainnya (<span id="galeri-count">0</span> foto)</label>
-                    <div id="preview-galeri-container" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"></div>
                 </div>
             </div>
         </div>

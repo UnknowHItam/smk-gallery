@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\GalleryLike;
 use App\Models\GalleryShare;
 use App\Models\GalleryView;
+use App\Models\GalleryDownload;
 use App\Models\Galery;
 use App\Models\Posts;
 use Illuminate\Http\Request;
@@ -60,6 +61,7 @@ class GalleryInteractionController extends Controller
     {
         $likesCount = GalleryLike::where('gallery_id', $galleryId)->count();
         $sharesCount = GalleryShare::where('gallery_id', $galleryId)->count();
+        $downloadsCount = GalleryDownload::where('gallery_id', $galleryId)->count();
         
         $isLiked = false;
         if (Auth::guard('public')->check()) {
@@ -73,6 +75,7 @@ class GalleryInteractionController extends Controller
             'stats' => [
                 'likes_count' => $likesCount,
                 'shares_count' => $sharesCount,
+                'downloads_count' => $downloadsCount,
                 'is_liked' => $isLiked
             ]
         ]);
@@ -179,6 +182,7 @@ class GalleryInteractionController extends Controller
             $stats = [
                 'likes_count' => 0,
                 'shares_count' => 0,
+                'downloads_count' => 0,
                 'views_count' => 0,
                 'is_liked' => false,
             ];
@@ -186,6 +190,7 @@ class GalleryInteractionController extends Controller
             if ($gallery) {
                 $stats['likes_count'] = GalleryLike::where('gallery_id', $gallery->id)->count();
                 $stats['shares_count'] = GalleryShare::where('gallery_id', $gallery->id)->count();
+                $stats['downloads_count'] = GalleryDownload::where('gallery_id', $gallery->id)->count();
                 $stats['views_count'] = GalleryView::where('gallery_id', $gallery->id)->count();
                 
                 if (Auth::guard('public')->check()) {

@@ -35,9 +35,6 @@
             <button type="button" onclick="selectAllPosts()" class="text-sm text-blue-600 hover:text-blue-700 font-medium">
                 Pilih Semua
             </button>
-            <button type="button" onclick="deselectAllPosts()" class="text-sm text-gray-600 hover:text-gray-700 font-medium">
-                Batal Pilih
-            </button>
             <div class="h-6 w-px bg-gray-300"></div>
             <div class="flex items-center gap-2">
                 <button type="button" onclick="bulkPublish()" class="px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 transition-colors shadow-sm flex items-center gap-1.5">

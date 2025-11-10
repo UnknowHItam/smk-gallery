@@ -2,6 +2,23 @@
 
 Website galeri dan informasi sekolah yang dibangun dengan Laravel 11, menampilkan kegiatan, agenda, ekstrakurikuler, dan informasi sekolah lainnya.
 
+---
+
+## ⚠️ PENTING! Baca Ini Dulu
+
+> **🚨 FOTO BROKEN SETIAP GANTI DEVICE?**
+> 
+> Jika Anda clone/pull project ini di device baru dan foto-foto tidak muncul, **WAJIB** jalankan:
+> ```bash
+> setup-storage.bat  # Windows
+> # atau
+> php artisan storage:link
+> ```
+> 
+> 📖 **Baca panduan lengkap:** [SETUP_DEVICE_BARU.md](SETUP_DEVICE_BARU.md)
+
+---
+
 ## ✨ Features
 
 - 📰 **Posts Management** - Kelola berita dan kegiatan sekolah

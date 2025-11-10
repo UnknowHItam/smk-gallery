@@ -120,6 +120,7 @@ class HomeController extends Controller
                         'status' => $agenda->status,
                         'is_berlangsung' => $agenda->isBerlangsung(),
                         'is_akan_datang' => $agenda->isAkanDatang(),
+                        'is_selesai' => $agenda->isSelesai(),
                     ];
                 }),
                 'month_name' => $monthNames[$month],

@@ -115,6 +115,14 @@ class Agenda extends Model
     }
 
     /**
+     * Cek apakah agenda sudah selesai
+     */
+    public function isSelesai()
+    {
+        return $this->tanggal_selesai < Carbon::today();
+    }
+
+    /**
      * Get formatted date range
      */
     public function getFormattedDateRange()

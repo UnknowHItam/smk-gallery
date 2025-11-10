@@ -1,2 +1,4 @@
-*
+# Allow all uploaded files to be committed
+# This ensures images are available after clone
+!*
 !.gitignore

@@ -1123,6 +1123,57 @@
         .animation-delay-3000 {
             animation-delay: 3s;
         }
+        
+        /* Mobile Responsive Fixes */
+        @media (max-width: 768px) {
+            .min-h-\[600px\] {
+                min-height: 400px !important;
+            }
+            
+            .text-6xl {
+                font-size: 2.5rem !important;
+            }
+            
+            .text-5xl {
+                font-size: 2rem !important;
+            }
+            
+            .text-4xl {
+                font-size: 1.75rem !important;
+            }
+            
+            .text-3xl {
+                font-size: 1.5rem !important;
+            }
+            
+            .aspect-video {
+                aspect-ratio: 16/9;
+            }
+            
+            .aspect-square {
+                aspect-ratio: 1/1;
+            }
+        }
+        
+        @media (max-width: 640px) {
+            .px-6 {
+                padding-left: 1rem !important;
+                padding-right: 1rem !important;
+            }
+            
+            .py-12 {
+                padding-top: 2rem !important;
+                padding-bottom: 2rem !important;
+            }
+            
+            .gap-8 {
+                gap: 1rem !important;
+            }
+            
+            .space-y-8 > * + * {
+                margin-top: 1rem !important;
+            }
+        }
 
         /* Mobile responsive adjustments */
         @media (max-width: 768px) {
@@ -1777,7 +1828,7 @@
                 mainImage.alt = ekstrakurikuler.nama;
             } else {
                 // Default image if no photo
-                mainImage.src = '{{ asset('images/default-ekstrakurikuler.jpg') }}';
+                mainImage.src = '{{ asset('images/default-ekstrakurikuler.svg') }}';
                 mainImage.alt = 'Gambar tidak tersedia';
             }
             
@@ -1936,11 +1987,20 @@
             agendas.forEach(agenda => {
                 const div = document.createElement('div');
                 div.className = 'bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition';
+                // Determine status badge
+                let statusBadge = '';
+                if (agenda.is_berlangsung) {
+                    statusBadge = '<span class="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full font-medium flex items-center gap-1"><span class="w-1.5 h-1.5 bg-green-600 rounded-full animate-pulse"></span>Sedang Berlangsung</span>';
+                } else if (agenda.is_selesai) {
+                    statusBadge = '<span class="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded-full font-medium">✓ Selesai</span>';
+                } else if (agenda.is_akan_datang) {
+                    statusBadge = '<span class="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full font-medium">📅 Akan Datang</span>';
+                }
+                
                 div.innerHTML = `
-                    <div class="flex items-start justify-between mb-2">
-                        <h5 class="font-semibold text-gray-900 text-sm">${agenda.judul}</h5>
-                        ${agenda.is_berlangsung ? '<span class="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">● Berlangsung</span>' : ''}
-                        ${agenda.is_akan_datang ? '<span class="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">📅 Akan Datang</span>' : ''}
+                    <div class="flex items-start justify-between mb-2 gap-2">
+                        <h5 class="font-semibold text-gray-900 text-sm flex-1">${agenda.judul}</h5>
+                        ${statusBadge}
                     </div>
                     <p class="text-xs text-gray-600 mb-1">📅 ${agenda.tanggal_formatted}${agenda.waktu ? ' • ⏰ ' + agenda.waktu : ''}</p>
                     ${agenda.lokasi ? '<p class="text-xs text-gray-600 mb-2">📍 ' + agenda.lokasi + '</p>' : ''}

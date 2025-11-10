@@ -15,6 +15,49 @@
             font-family: 'Inter', sans-serif;
             overflow-x: hidden;
         }
+        
+        /* Mobile Responsive Styles */
+        @media (max-width: 768px) {
+            .min-h-\[400px\] {
+                min-height: 300px !important;
+            }
+            
+            .text-5xl {
+                font-size: 2rem !important;
+            }
+            
+            .text-4xl {
+                font-size: 1.75rem !important;
+            }
+            
+            .text-3xl {
+                font-size: 1.5rem !important;
+            }
+            
+            .text-2xl {
+                font-size: 1.25rem !important;
+            }
+            
+            .p-8, .p-10 {
+                padding: 1.5rem !important;
+            }
+            
+            .gap-6, .gap-8 {
+                gap: 1rem !important;
+            }
+        }
+        
+        @media (max-width: 640px) {
+            .px-6 {
+                padding-left: 1rem !important;
+                padding-right: 1rem !important;
+            }
+            
+            .py-6, .py-8 {
+                padding-top: 1.5rem !important;
+                padding-bottom: 1.5rem !important;
+            }
+        }
 
         /* Enhanced Gallery Animations */
         @keyframes fadeIn {
@@ -590,6 +633,33 @@
             -webkit-line-clamp: 2;
             -webkit-box-orient: vertical;
             overflow: hidden;
+        }
+        
+        /* Mobile Modal Responsive */
+        @media (max-width: 768px) {
+            #galleryDetailModal .max-w-7xl {
+                max-width: 100% !important;
+                margin: 0 !important;
+                padding: 0.5rem !important;
+            }
+            
+            #galleryDetailModal .rounded-3xl {
+                border-radius: 1rem !important;
+            }
+            
+            #galleryDetailModal .p-6, #galleryDetailModal .p-8 {
+                padding: 1rem !important;
+            }
+            
+            #allPhotosGrid {
+                grid-template-columns: repeat(3, 1fr) !important;
+            }
+        }
+        
+        @media (max-width: 640px) {
+            #allPhotosGrid {
+                grid-template-columns: repeat(2, 1fr) !important;
+            }
         }
         
         /* Quick Like Button Styling */
