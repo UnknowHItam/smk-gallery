@@ -8,4 +8,17 @@ export default defineConfig({
             refresh: true,
         }),
     ],
+    server: {
+        // Ensure development server uses HTTPS
+        https: false,
+        hmr: {
+            host: 'localhost',
+            port: 5173,
+        },
+    },
+    build: {
+        // Ensure production build works correctly
+        outDir: 'public/build',
+        emptyOutDir: true,
+    },
 });

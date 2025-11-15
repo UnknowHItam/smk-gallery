@@ -12,6 +12,10 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        // Trust proxies for Railway and similar hosting environments
+        // This ensures X-Forwarded-Proto header is respected for HTTPS detection
+        $middleware->trustProxies(at: '*');
+        
         // Register route middleware aliases
         $middleware->alias([
             'admin' => \App\Http\Middleware\AdminMiddleware::class,
