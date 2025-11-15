@@ -12,6 +12,11 @@ return new class extends Migration
      */
     public function up(): void
     {
+        // Skip if kategori table doesn't exist yet
+        if (!Schema::hasTable('kategori')) {
+            return;
+        }
+
         // Ambil ID kategori yang akan dipertahankan (yang pertama kali muncul)
         $kegiatanId = DB::table('kategori')->where('judul', 'Kegiatan')->orderBy('id')->value('id');
         $kejuaraanId = DB::table('kategori')->where('judul', 'Kejuaraan')->orderBy('id')->value('id');

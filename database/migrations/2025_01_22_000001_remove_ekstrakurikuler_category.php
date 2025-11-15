@@ -12,6 +12,11 @@ return new class extends Migration
      */
     public function up(): void
     {
+        // Skip if kategori table doesn't exist yet
+        if (!Schema::hasTable('kategori')) {
+            return;
+        }
+
         // Cari ID kategori Kegiatan dan Ekstrakurikuler
         $kegiatanId = DB::table('kategori')->where('judul', 'Kegiatan')->value('id');
         $ekstrakurikulerId = DB::table('kategori')->where('judul', 'Ekstrakurikuler')->value('id');

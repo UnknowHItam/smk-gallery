@@ -13,6 +13,11 @@ return new class extends Migration
      */
     public function up(): void
     {
+        // Skip if kategori table doesn't exist yet
+        if (!Schema::hasTable('kategori')) {
+            return;
+        }
+
         // First, ensure we have the Kegiatan category
         $kegiatanCategory = Kategori::firstOrCreate(['judul' => 'Kegiatan']);
         
