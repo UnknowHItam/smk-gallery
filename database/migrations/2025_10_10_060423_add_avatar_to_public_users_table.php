@@ -11,6 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
+        // Skip if avatar column already exists
+        if (Schema::hasColumn('public_users', 'avatar')) {
+            return;
+        }
+
         Schema::table('public_users', function (Blueprint $table) {
             $table->string('avatar', 10)->nullable()->default('🐼')->after('email');
         });
@@ -21,8 +26,10 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('public_users', function (Blueprint $table) {
-            $table->dropColumn('avatar');
-        });
+        if (Schema::hasColumn('public_users', 'avatar')) {
+            Schema::table('public_users', function (Blueprint $table) {
+                $table->dropColumn('avatar');
+            });
+        }
     }
 };
