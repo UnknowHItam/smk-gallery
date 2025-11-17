@@ -1151,6 +1151,7 @@
             });
 
             // Add hover effect sound (optional - can be removed)
+            const galleryItems = document.querySelectorAll('[data-gallery-item]');
             galleryItems.forEach(item => {
                 item.addEventListener('mouseenter', function() {
                     this.style.transition = 'all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)';
@@ -1564,8 +1565,8 @@
         window.isPublicUserAuthenticated = false;
         window.publicUserData = null;
         let pendingDownloadAction = null;
-        let otpResendTimeout = 60;
-        let otpResendInterval = null;
+        // Note: otpResendTimeout and otpResendInterval are declared in layouts/app.blade.php
+        // to avoid redeclaration errors when both scripts are loaded
 
         // Check authentication status on page load
         async function checkPublicAuth() {
@@ -1586,10 +1587,18 @@
             const userAuthStatus = document.getElementById('userAuthStatus');
             const userNameDisplay = document.getElementById('userNameDisplay');
 
+            // Safety check: only update if element exists
+            if (!userAuthStatus) {
+                console.warn('userAuthStatus element not found in DOM');
+                return;
+            }
+
             if (window.isPublicUserAuthenticated && window.publicUserData) {
                 userAuthStatus.classList.remove('hidden');
                 userAuthStatus.classList.add('flex');
-                userNameDisplay.textContent = window.publicUserData.name;
+                if (userNameDisplay) {
+                    userNameDisplay.textContent = window.publicUserData.name;
+                }
             } else {
                 userAuthStatus.classList.add('hidden');
             }

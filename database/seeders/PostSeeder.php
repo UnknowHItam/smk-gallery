@@ -27,11 +27,26 @@ class PostSeeder extends Seeder
             ]);
         }
 
-        // Ambil kategori
-        $beritaKategori = Kategori::where('judul', 'Berita')->first();
-        $kejuaraanKategori = Kategori::where('judul', 'Kejuaraan')->first();
-        $eskulKategori = Kategori::where('judul', 'Ekstrakurikuler')->first();
-        $agendaKategori = Kategori::where('judul', 'Agenda')->first();
+        // Pastikan kategori ada, jika tidak buat baru
+        $beritaKategori = Kategori::firstOrCreate(
+            ['judul' => 'Berita'],
+            ['judul' => 'Berita']
+        );
+        
+        $kejuaraanKategori = Kategori::firstOrCreate(
+            ['judul' => 'Kejuaraan'],
+            ['judul' => 'Kejuaraan']
+        );
+        
+        $eskulKategori = Kategori::firstOrCreate(
+            ['judul' => 'Ekstrakurikuler'],
+            ['judul' => 'Ekstrakurikuler']
+        );
+        
+        $agendaKategori = Kategori::firstOrCreate(
+            ['judul' => 'Agenda'],
+            ['judul' => 'Agenda']
+        );
 
         // Data postingan
         $posts = [
@@ -94,4 +109,4 @@ class PostSeeder extends Seeder
             // Foto akan ditampilkan sebagai placeholder
         }
     }
-}
+};
