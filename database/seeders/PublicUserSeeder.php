@@ -13,17 +13,21 @@ class PublicUserSeeder extends Seeder
      */
     public function run(): void
     {
-        // Create a test public user
+        // Create a test public user - VERIFIED so they can login
         PublicUser::create([
             'name' => 'Test User',
             'email' => 'user@test.com',
             'password' => Hash::make('password123'),
+            'verification_status' => 'VERIFIED',
+            'email_verified_at' => now(),
         ]);
 
         PublicUser::create([
             'name' => 'John Doe',
             'email' => 'john@example.com',
             'password' => Hash::make('password123'),
+            'verification_status' => 'VERIFIED',
+            'email_verified_at' => now(),
         ]);
 
         $this->command->info('Public users created successfully!');

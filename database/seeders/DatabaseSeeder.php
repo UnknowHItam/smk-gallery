@@ -29,6 +29,7 @@ class DatabaseSeeder extends Seeder
         ]);
 
         $this->call([
+            PublicUserSeeder::class,
             KategoriSeeder::class,
             PostSeeder::class,
             EkstrakurikulerSeeder::class,
