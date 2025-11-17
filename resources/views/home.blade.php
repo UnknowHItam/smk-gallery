@@ -1676,18 +1676,20 @@
                 });
             }
 
-            // Close modals when clicking outside
-            [ratingModal, thankYouModal].forEach(modal => {
-                modal.addEventListener('click', function(e) {
-                    if (e.target === modal) {
-                        if (modal === ratingModal) {
-                            showThankYouModal(0);
-                        } else {
-                            modal.classList.add('hidden');
-                            resetForm();
+            // Close containers when clicking outside
+            [ratingContainer, thankYouContainer].forEach(container => {
+                if (container) {
+                    container.addEventListener('click', function(e) {
+                        if (e.target === container) {
+                            if (container === ratingContainer) {
+                                showThankYouContainer(0);
+                            } else {
+                                container.classList.add('hidden');
+                                resetForm();
+                            }
                         }
-                    }
-                });
+                    });
+                }
             });
         });
     </script>
