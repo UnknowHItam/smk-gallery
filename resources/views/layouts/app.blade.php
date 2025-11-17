@@ -1395,6 +1395,37 @@
             const formData = new FormData(form);
             const errorDiv = document.getElementById('registerError');
 
+            // Get form values
+            const name = formData.get('name');
+            const email = formData.get('email');
+            const password = formData.get('password');
+            const password_confirmation = formData.get('password_confirmation');
+
+            // Client-side validation
+            if (!name || name.trim().length === 0) {
+                errorDiv.querySelector('span').textContent = 'Nama tidak boleh kosong';
+                errorDiv.classList.remove('hidden');
+                return;
+            }
+
+            if (!email || email.trim().length === 0) {
+                errorDiv.querySelector('span').textContent = 'Email tidak boleh kosong';
+                errorDiv.classList.remove('hidden');
+                return;
+            }
+
+            if (!password || password.length < 8) {
+                errorDiv.querySelector('span').textContent = 'Password minimal 8 karakter';
+                errorDiv.classList.remove('hidden');
+                return;
+            }
+
+            if (password !== password_confirmation) {
+                errorDiv.querySelector('span').textContent = 'Password tidak cocok';
+                errorDiv.classList.remove('hidden');
+                return;
+            }
+
             try {
                 const response = await fetch('{{ route("public.register") }}', {
                     method: 'POST',
@@ -1403,25 +1434,35 @@
                         'X-CSRF-TOKEN': '{{ csrf_token() }}'
                     },
                     body: JSON.stringify({
-                        name: formData.get('name'),
-                        email: formData.get('email'),
-                        password: formData.get('password'),
-                        password_confirmation: formData.get('password_confirmation')
+                        name: name,
+                        email: email,
+                        password: password,
+                        password_confirmation: password_confirmation
                     })
                 });
 
                 const data = await response.json();
+                console.log('Register response:', data);
 
                 if (data.success) {
+                    // Show OTP modal for verification
+                    if (data.show_otp_modal) {
+                        closeAuthModal();
+                        showOtpModal(data.email, data.type);
+                        form.reset();
+                        return;
+                    }
                     window.location.reload();
                 } else {
                     errorDiv.querySelector('span').textContent = data.message || 'Registrasi gagal';
                     errorDiv.classList.remove('hidden');
+                    console.error('Register error:', data);
                 }
             } catch (error) {
                 const errorMessage = error.message || 'Terjadi kesalahan';
                 errorDiv.querySelector('span').textContent = errorMessage;
                 errorDiv.classList.remove('hidden');
+                console.error('Register exception:', error);
             }
         }
 
