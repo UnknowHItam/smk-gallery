@@ -13,20 +13,27 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // User::factory(10)->create();
+        // Only seed test users in development, not in production
+        if (app()->environment('production')) {
+            // In production, only seed categories and posts
+            $this->command->info('Production environment detected - skipping user seeding');
+        } else {
+            // Development: Create test users
+            // Default regular user
+            User::factory()->create([
+                'name' => 'Test User',
+                'email' => 'test@example.com',
+            ]);
 
-        // Default regular user
-        User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
-        ]);
+            // Admin user
+            User::factory()->create([
+                'name' => 'Administrator',
+                'email' => 'admin@example.com',
+                'is_admin' => true,
+            ]);
 
-        // Admin user
-        User::factory()->create([
-            'name' => 'Administrator',
-            'email' => 'admin@example.com',
-            'is_admin' => true,
-        ]);
+            $this->command->info('Development users created');
+        }
 
         $this->call([
             PublicUserSeeder::class,

@@ -13,7 +13,15 @@ class PublicUserSeeder extends Seeder
      */
     public function run(): void
     {
-        // Create a test public user - VERIFIED so they can login
+        // Only create test public users in development environment
+        // In production, users register themselves
+        if (app()->environment('production')) {
+            $this->command->info('⏭️  Skipping PublicUserSeeder in production');
+            $this->command->info('ℹ️  Users will register through the public registration form');
+            return;
+        }
+
+        // Development: Create test public users for testing
         PublicUser::create([
             'name' => 'Test User',
             'email' => 'user@test.com',
@@ -30,9 +38,9 @@ class PublicUserSeeder extends Seeder
             'email_verified_at' => now(),
         ]);
 
-        $this->command->info('Public users created successfully!');
-        $this->command->info('Test credentials:');
-        $this->command->info('Email: user@test.com | Password: password123');
-        $this->command->info('Email: john@example.com | Password: password123');
+        $this->command->info('✅ Public users created successfully!');
+        $this->command->info('📝 Test credentials (Development only):');
+        $this->command->info('   Email: user@test.com | Password: password123');
+        $this->command->info('   Email: john@example.com | Password: password123');
     }
 }
