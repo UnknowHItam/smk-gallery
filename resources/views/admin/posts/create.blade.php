@@ -51,11 +51,8 @@
                         <label class="form-label">Kategori <span class="text-red-500">*</span></label>
                         <select name="kategori_id" class="form-select" required>
                             <option value="">Pilih Kategori</option>
-                            @foreach($kategoris as $kategori)
-                                <option value="{{ $kategori->id }}" {{ old('kategori_id') == $kategori->id ? 'selected' : '' }}>
-                                    {{ $kategori->judul }}
-                                </option>
-                            @endforeach
+                            <option value="1" {{ old('kategori_id') == '1' ? 'selected' : '' }}>Kegiatan</option>
+                            <option value="2" {{ old('kategori_id') == '2' ? 'selected' : '' }}>Kejuaraan</option>
                         </select>
                     </div>
                 </div>

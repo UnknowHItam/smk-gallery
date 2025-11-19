@@ -365,7 +365,7 @@
                                         <div class="text-xs opacity-90 mt-1">Total Posts</div>
                                     </div>
                                     <div class="bg-white/20 backdrop-blur-sm rounded-2xl px-5 py-3 min-w-[80px] text-center">
-                                        <div class="text-3xl font-bold">{{ $categories->count() }}</div>
+                                        <div class="text-3xl font-bold">2</div>
                                         <div class="text-xs opacity-90 mt-1">Categories</div>
                                     </div>
                                 </div>

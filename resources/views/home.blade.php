@@ -230,12 +230,6 @@
                     <button id="tab-kejuaraan" class="tab-btn px-6 py-3 text-sm font-medium text-gray-600 hover:text-blue-600" data-tab="kejuaraan">
                         🏆 Kejuaraan
                     </button>
-                    <button id="tab-eskul" class="tab-btn px-6 py-3 text-sm font-medium text-gray-600 hover:text-blue-600" data-tab="eskul">
-                        ⚽ Eskul
-                    </button>
-                    <button id="tab-agenda" class="tab-btn px-6 py-3 text-sm font-medium text-gray-600 hover:text-blue-600 rounded-r-lg" data-tab="agenda">
-                        📅 Agenda
-                    </button>
                 </div>
             </div>
             
